@@ -4,7 +4,7 @@
 
 [**Online converter →**](https://jliu-science.github.io/XRD-data-bridge/)
 
-| Desktop bridge (lab PC) | Online converter (any device, scan the QR code) |
+| Desktop bridge (lab PC) | Online converter |
 | --- | --- |
 | ![Desktop bridge](docs/images/desktop-app.png) | ![Online converter](docs/images/online-converter.png) |
 
@@ -29,8 +29,7 @@ Coming next: Bruker `.raw` and PANalytical `.rd` (see [notes](xrd_sdl_bridge/doc
 
 ## Online converter (students, phones)
 
-Open **https://jliu-science.github.io/XRD-data-bridge/** or scan the QR code shown at the bottom of that page.
-The page runs the same converter in the browser (via [Pyodide](https://pyodide.org)); **files never leave your device**. The first visit downloads about 15 MB.
+The online converter uses the same dashboard as the desktop app. Choose files or a folder, select your output formats, and click **Convert All** to download a ZIP. Conversion runs on your device via [Pyodide](https://pyodide.org). Live folder watching and launching HighScore require the desktop app.
 
 ## Desktop bridge (lab PC, Windows)
 

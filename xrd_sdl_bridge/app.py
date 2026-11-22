@@ -38,8 +38,8 @@ if (_PORTABLE_TCL / "tcl8.6").is_dir() and "TCL_LIBRARY" not in os.environ:
 if (_PORTABLE_TCL / "tk8.6").is_dir() and "TK_LIBRARY" not in os.environ:
     os.environ["TK_LIBRARY"] = str(_PORTABLE_TCL / "tk8.6")
 
-from converter import inspect_hdf5_tree, read_scan_file  # noqa: E402
-from highscore_bridge import assess_scan_quality, is_allowed_viewer_exe, launch_in_highscore  # noqa: E402
+from converter import inspect_hdf5_tree  # noqa: E402
+from highscore_bridge import is_allowed_viewer_exe, launch_in_highscore  # noqa: E402
 from sample_data_gen import generate_demo_dataset  # noqa: E402
 from watcher import FolderBridgeManager  # noqa: E402
 
@@ -222,47 +222,7 @@ def build_handler(manager: FolderBridgeManager, token: str) -> type[BaseHTTPRequ
                         self._send_json({"error": "Missing 'path' query parameter"}, status=HTTPStatus.BAD_REQUEST)
                         return
                     file_path = str(self._allowed_path(file_path))
-                    cfg = manager.config
-                    scans = read_scan_file(
-                        file_path,
-                        angle_dataset=cfg.angle_dataset_override or None,
-                        intensity_dataset=cfg.intensity_dataset_override or None,
-                        default_anode=cfg.anode,
-                    )
-                    scan = scans[0]
-                    qc = assess_scan_quality(scan)
-
-                    # Downsample only if extremely dense (>4500 pts) for smooth UI rendering.
-                    x = scan.two_theta
-                    y = scan.intensity
-                    if x.size > 4500:
-                        step = max(1, x.size // 4500)
-                        x = x[::step]
-                        y = y[::step]
-
-                    src_path = Path(file_path)
-                    xrdml_cand = manager._output_targets(src_path, scan.name, create=False).get("xrdml")
-                    if (xrdml_cand is None or not xrdml_cand.is_file()) and src_path.suffix.lower() == ".xrdml":
-                        xrdml_cand = src_path
-                    xrdml_head = ""
-                    if xrdml_cand is not None and xrdml_cand.is_file():
-                        xrdml_head = "\n".join(xrdml_cand.read_text(encoding="utf-8", errors="replace").splitlines()[:28])
-
-                    anode, wl = scan.resolved_wavelengths(cfg.anode)
-                    self._send_json(
-                        {
-                            "name": scan.name,
-                            "source_format": scan.source_format,
-                            "anode": anode,
-                            "ka1": wl["kAlpha1"],
-                            "total_points": int(scan.two_theta.size),
-                            "two_theta": [round(float(v), 4) for v in x],
-                            "intensity": [round(float(v), 2) for v in y],
-                            "metadata": scan.metadata,
-                            "qc": qc,
-                            "xrdml_preview": xrdml_head,
-                        }
-                    )
+                    self._send_json(manager.preview_scan(Path(file_path)))
                     return
 
                 if parsed.path == "/api/hdf5-tree":

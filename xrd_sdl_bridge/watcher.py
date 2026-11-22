@@ -592,6 +592,47 @@ class FolderBridgeManager:
 
         return {"converted": converted, "errors": errors}
 
+    def preview_scan(self, file_path: Path) -> dict[str, Any]:
+        """Read the scan, quality metrics and display data for either dashboard transport."""
+        cfg = self.config
+        scans = read_scan_file(
+            file_path,
+            angle_dataset=cfg.angle_dataset_override or None,
+            intensity_dataset=cfg.intensity_dataset_override or None,
+            default_anode=cfg.anode,
+        )
+        scan = scans[0]
+        qc = assess_scan_quality(scan)
+
+        # Downsample only if extremely dense (>4500 pts) for smooth UI rendering.
+        x = scan.two_theta
+        y = scan.intensity
+        if x.size > 4500:
+            step = max(1, x.size // 4500)
+            x = x[::step]
+            y = y[::step]
+
+        xrdml_cand = self._output_targets(file_path, scan.name, create=False).get("xrdml")
+        if (xrdml_cand is None or not xrdml_cand.is_file()) and file_path.suffix.lower() == ".xrdml":
+            xrdml_cand = file_path
+        xrdml_head = ""
+        if xrdml_cand is not None and xrdml_cand.is_file():
+            xrdml_head = "\n".join(xrdml_cand.read_text(encoding="utf-8", errors="replace").splitlines()[:28])
+
+        anode, wl = scan.resolved_wavelengths(cfg.anode)
+        return {
+            "name": scan.name,
+            "source_format": scan.source_format,
+            "anode": anode,
+            "ka1": wl["kAlpha1"],
+            "total_points": int(scan.two_theta.size),
+            "two_theta": [round(float(v), 4) for v in x],
+            "intensity": [round(float(v), 2) for v in y],
+            "metadata": scan.metadata,
+            "qc": qc,
+            "xrdml_preview": xrdml_head,
+        }
+
     def get_dashboard_state(self) -> dict[str, Any]:
         """Collect complete state snapshot for the web UI."""
         with self._lock:

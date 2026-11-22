@@ -849,6 +849,7 @@
     }
 
     async function api(url, opts = {}) {
+      if (window.browserBridge) return window.browserBridge.request(url, opts);
       const token = (document.querySelector('meta[name="bridge-token"]') || {}).content || "";
       const res = await fetch(url, {
         ...opts,
@@ -1016,14 +1017,14 @@
         const isH5 = f.ext === ".hdf5" || f.ext === ".h5";
         const folder = f.subfolder && f.subfolder !== "." ? escapeHtml(f.subfolder) : "root";
         const h5Btn = isH5
-          ? `<button class="btn link muted" onclick='event.stopPropagation(); inspectH5(${JSON.stringify(f.path)})'>H5 Tree</button>`
+          ? `<button class="btn link muted" onclick='event.stopPropagation(); inspectH5(${escapeHtml(JSON.stringify(f.path))})'>H5 Tree</button>`
           : "";
-        const hsBtn = f.xrdml_exists
-          ? `<button class="btn link gold" onclick='event.stopPropagation(); openInHighScore(${JSON.stringify(f.xrdml_path)})'>HighScore ↗</button>`
+        const hsBtn = f.xrdml_exists && !window.browserBridge
+          ? `<button class="btn link gold" onclick='event.stopPropagation(); openInHighScore(${escapeHtml(JSON.stringify(f.xrdml_path))})'>HighScore ↗</button>`
           : "";
 
         return `
-          <div class="lib-row ${isActive ? "active" : ""}" onclick='previewScan(${JSON.stringify(f.path)})'>
+          <div class="lib-row ${isActive ? "active" : ""}" onclick='previewScan(${escapeHtml(JSON.stringify(f.path))})'>
             <span class="ftype ${isH5 ? "h5" : ""}">${escapeHtml(f.ext.replace(".", "").toUpperCase())}</span>
             <div style="min-width:0;">
               <div class="fname" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
@@ -1034,7 +1035,7 @@
             <span class="status">${Object.entries(f.outputs || {}).map(([fmt, o]) => `<span class="${o.exists ? "ok" : ""}" title="${escapeHtml(o.path)}">${fmt.toUpperCase()}</span>`).join("") || '<span>—</span>'}</span>
             <span class="row-actions">
               ${h5Btn}
-              <button class="btn link" onclick='event.stopPropagation(); convertOne(${JSON.stringify(f.path)})'>Convert</button>
+              <button class="btn link" onclick='event.stopPropagation(); convertOne(${escapeHtml(JSON.stringify(f.path))})'>Convert</button>
               ${hsBtn}
             </span>
           </div>
@@ -1128,7 +1129,7 @@
         if (res.ok) {
           syncFormFromConfig(res.state.config);
           showToast(target === "custom_output_dir" ? "Output folder: " + res.path : "Raw folder: " + res.path);
-          if (target === "input_dir" && res.state.sources && res.state.sources.length) {
+          if (target !== "custom_output_dir" && res.state.sources && res.state.sources.length) {
             previewScan(res.state.sources[0].path);
           }
         }
@@ -1494,8 +1495,9 @@
       if (currentPreview) drawPlot(currentPreview, -1);
     });
 
+    if (window.browserBridge) window.browserBridge.configure();
+    else setInterval(refreshState, 3000);
     refreshState();
-    setInterval(refreshState, 3000);
   </script>
 </body>
 </html>

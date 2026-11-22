@@ -1,7 +1,6 @@
 """Assemble the GitHub Pages site into ./_site (used by CI and for local testing).
 
-The online converter runs the *same* converter.py as the desktop bridge, copied in at build time,
-so there is only one copy of the conversion code in the repository.
+The site serves the desktop dashboard with a browser transport built on the same conversion modules.
 
     python tools/build_web.py            # build ./_site
     python tools/build_web.py --serve    # build and serve on http://127.0.0.1:8800
@@ -21,7 +20,18 @@ def build() -> Path:
     if SITE.exists():
         shutil.rmtree(SITE)
     shutil.copytree(ROOT / "web", SITE)
-    shutil.copy2(ROOT / "xrd_sdl_bridge" / "converter.py", SITE / "converter.py")
+    bridge = ROOT / "xrd_sdl_bridge"
+    for name in ("converter.py", "watcher.py", "highscore_bridge.py", "sample_data_gen.py"):
+        shutil.copy2(bridge / name, SITE / name)
+    for path in (bridge / "highscore_scripts").iterdir():
+        if path.suffix in {".md", ".pas"}:
+            shutil.copy2(path, SITE / path.name)
+    html = (bridge / "static" / "index.html").read_text(encoding="utf-8")
+    html = html.replace(
+        '  <meta name="bridge-token" content="__BRIDGE_TOKEN__" />',
+        '  <script src="browser.js"></script>',
+    )
+    (SITE / "index.html").write_text(html, encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
     return SITE
 
