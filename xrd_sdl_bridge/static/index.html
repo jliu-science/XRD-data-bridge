@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="bridge-token" content="__BRIDGE_TOKEN__" />
+  <title>XRD Data Bridge</title>
+  <style>
+    /* =================================================================
+       XRD Data Bridge — "Atelier" design
+       Ivory paper, ink black, deep sapphire, champagne gold.
+       Typeface: DengXian (等线) throughout.
+       ================================================================= */
+    :root {
+      --font: "DengXian", "等线", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      --font-light: "DengXian Light", "等线 Light", "DengXian", "等线", "Microsoft YaHei UI Light", sans-serif;
+
+      --paper: #edf1f6;
+      --paper-2: #e3e9f1;
+      --card: #ffffff;
+      --line: #d3dbe7;
+      --line-soft: #e5eaf1;
+      --line-strong: #b6c1d2;
+
+      --ink: #0a1428;
+      --ink-2: #1f2c48;
+      --muted: #4c5873;
+      --faint: #929bb0;
+
+      --sapphire: #2456e8;
+      --sapphire-2: #1a40b8;
+      --sapphire-soft: #e6edff;
+      --gold: #f59f00;
+      --gold-ink: #c25e00;
+      --gold-soft: #fff6e0;
+
+      --ok: #0b9b6d;
+      --ok-soft: #edf6f1;
+      --warn: #a86b12;
+      --warn-soft: #fbf3e4;
+      --err: #b4382f;
+
+      --shadow-1: 0 1px 2px rgba(22, 24, 29, 0.04);
+      --shadow-2: 0 1px 2px rgba(22, 24, 29, 0.03), 0 12px 32px -12px rgba(22, 24, 29, 0.10);
+      --shadow-float: 0 32px 64px -16px rgba(22, 24, 29, 0.25);
+      --r: 4px;
+      --r-lg: 6px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 14.5px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    button, input, select { font-family: var(--font); }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .mono { font-family: var(--font); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+    /* ---------------- Header ---------------- */
+    .topnav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: saturate(1.4) blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topnav-inner {
+      max-width: 1440px; margin: 0 auto; height: 66px; padding: 0 40px;
+      display: flex; align-items: center; gap: 36px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--ink); }
+    .brand-mark { width: 34px; height: 34px; border: 1px solid var(--ink); display: grid; place-items: center; border-radius: 50%; }
+    .brand-name { font-size: 17px; font-weight: 700; letter-spacing: 0.01em; line-height: 1.1; }
+    .brand-name small { display: block; font-size: 10.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+
+    .navlinks { display: flex; gap: 28px; height: 100%; }
+    .navlinks a {
+      display: flex; align-items: center; height: 100%;
+      font-size: 14px; color: var(--ink-2); text-decoration: none; letter-spacing: 0.02em;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
+    }
+    .navlinks a:hover { color: var(--ink); }
+    .navlinks a.active { color: var(--sapphire); font-weight: 700; border-bottom: 3px solid var(--sapphire); }
+
+    .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+    /* ---------------- Buttons ---------------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+      font-size: 13.5px; font-weight: 400; letter-spacing: 0.02em;
+      padding: 8px 16px; border-radius: var(--r);
+      border: 1px solid var(--line-strong); background: var(--card); color: var(--ink);
+      cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .btn:hover { border-color: var(--ink); }
+    .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .btn.dark { background: var(--sapphire); border-color: var(--sapphire); color: #fff; box-shadow: 0 6px 16px -6px rgba(29, 78, 216, 0.55); }
+    .btn.dark:hover { background: var(--sapphire-2); border-color: var(--sapphire-2); }
+    .btn.dark .sub { color: #ffd8a8; font-size: 12px; }
+    .btn.text { border-color: transparent; background: transparent; color: var(--ink-2); padding: 8px 10px; }
+    .btn.text:hover { color: var(--ink); background: var(--paper-2); }
+    .btn.sm { font-size: 12.5px; padding: 5px 11px; }
+    .btn.link { border: 0; background: none; padding: 2px 0; color: var(--sapphire); font-size: 13px; font-weight: 700; }
+    .btn.link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+    .btn.link.gold { color: var(--gold-ink); }
+    .btn.link.muted { color: var(--muted); }
+
+    .watch {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line-strong);
+      background: var(--card); color: var(--ink-2); font-size: 13px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .watch:hover { border-color: var(--ink); color: var(--ink); }
+    .watch .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+    .watch.on { border-color: rgba(46, 125, 91, 0.45); background: var(--ok-soft); color: var(--ok); }
+    .watch.on .dot { background: var(--ok); }
+    .dot-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(46, 125, 91, 0.45); }
+      70% { box-shadow: 0 0 0 7px rgba(46, 125, 91, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 125, 91, 0); }
+    }
+
+    /* ---------------- Page ---------------- */
+    .page { max-width: 1440px; margin: 0 auto; padding: 0 40px 64px; }
+
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 40px; align-items: end;
+      padding: 52px 0 36px; border-bottom: 1px solid var(--line);
+    }
+    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold-ink); }
+    .hero h1 { margin: 14px 0 10px; font-family: var(--font); font-weight: 400; font-size: 44px; line-height: 1.12; letter-spacing: -0.01em; color: var(--ink); }
+    .hero h1 b { font-family: var(--font); font-weight: 700; color: var(--sapphire); }
+    .hero p { margin: 0; max-width: 620px; color: var(--ink-2); font-size: 15px; }
+
+    .stats { display: flex; }
+    .stat { padding: 0 30px; border-left: 1px solid var(--line); min-width: 140px; }
+    .stat:first-child { border-left: 0; padding-left: 0; }
+    .stat .k { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+    .stat .v { font-family: var(--font); font-weight: 700; font-size: 42px; line-height: 1.1; margin-top: 8px; color: var(--ink); }
+    .stat .v small { font-family: var(--font); font-size: 14px; color: var(--gold-ink); margin-left: 6px; letter-spacing: 0.02em; }
+    .stat .meter { margin-top: 10px; height: 2px; background: var(--line); position: relative; }
+    .stat .meter span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--gold); transition: width 0.6s ease; }
+
+    @media (max-width: 1180px) {
+      .hero { grid-template-columns: 1fr; }
+      .stats { flex-wrap: wrap; row-gap: 20px; }
+    }
+
+    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 44px 0 16px; flex-wrap: wrap; }
+    .section-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.01em; display: flex; align-items: baseline; gap: 14px; }
+    .section-head h2 .idx { font-family: var(--font-light); font-weight: 300; font-size: 13px; letter-spacing: 0.2em; color: var(--gold-ink); }
+    .section-head .aside { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-2); min-width: 0; }
+
+    /* ---------------- Pattern card ---------------- */
+    .pattern { display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
+    @media (max-width: 1100px) { .pattern { grid-template-columns: 1fr; } }
+    .pattern-main { padding: 26px 30px 22px; min-width: 0; }
+    .pattern-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+    .pattern-head h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0; word-break: break-word; }
+    .meta-line { font-size: 13px; color: var(--muted); margin-top: 4px; letter-spacing: 0.02em; }
+    .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; letter-spacing: 0.04em; padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-2); background: var(--card); white-space: nowrap; }
+    #xrdCanvas { width: 100%; height: 300px; display: block; cursor: crosshair; }
+    .readout { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px solid var(--line-soft); margin-top: 6px; padding-top: 12px; font-size: 13px; color: var(--muted); }
+    .readout-live { color: var(--sapphire); font-variant-numeric: tabular-nums; }
+    .legend { display: inline-flex; gap: 18px; align-items: center; }
+    .legend i { display: inline-block; vertical-align: middle; margin-right: 7px; }
+    .legend i.ln { width: 18px; height: 1.5px; background: var(--sapphire); }
+    .legend i.pk { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+
+    .qc { border-left: 1px solid var(--line); background: linear-gradient(180deg, #fcfbf8, #faf9f5); padding: 26px 26px 22px; display: flex; flex-direction: column; gap: 18px; border-radius: 0 var(--r-lg) var(--r-lg) 0; }
+    @media (max-width: 1100px) { .qc { border-left: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--r-lg) var(--r-lg); } }
+    .qc-k { font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+    .qc-verdict { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 16px; font-weight: 700; }
+    .qc-verdict .badge { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: #fff; background: var(--ok); }
+    .qc-verdict.warn .badge { background: var(--warn); }
+    .qc-rec { font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.6; }
+    .qc-metrics { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .qc-metrics > div { padding: 12px 0; }
+    .qc-metrics > div + div { border-left: 1px solid var(--line); padding-left: 16px; }
+    .qc-metrics .v { font-family: var(--font); font-weight: 700; font-size: 24px; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .peak-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+    .peak-table td { padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+    .peak-table td:first-child { color: var(--gold-ink); width: 22px; font-size: 11px; }
+    .peak-table td.r { text-align: right; color: var(--ink-2); }
+    .qc-empty { color: var(--muted); font-size: 13px; }
+
+    /* ---------------- Workspace: library + routing ---------------- */
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
+    @media (max-width: 1180px) { .workspace { grid-template-columns: 1fr; } }
+
+    .lib-tools { display: flex; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
+    .field-input, .select, .modal-input {
+      font-size: 13.5px; color: var(--ink); background: var(--card);
+      border: 1px solid var(--line-strong); border-radius: var(--r);
+      padding: 8px 12px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .select { cursor: pointer; }
+    .field-input:hover, .select:hover, .modal-input:hover { border-color: var(--faint); }
+    .field-input:focus, .select:focus, .modal-input:focus { border-color: var(--sapphire); box-shadow: 0 0 0 3px rgba(31, 59, 99, 0.10); }
+    .field-input::placeholder, .modal-input::placeholder { color: var(--faint); }
+    .modal-input { width: 100%; }
+
+    .lib-head, .lib-row {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 76px 136px 124px 200px;
+      gap: 16px; align-items: center; padding: 0 20px;
+    }
+    .lib-head { height: 40px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); background: #f7f9fc; }
+    .lib-head .r, .lib-row .r { text-align: right; justify-content: flex-end; }
+    .scan-list { max-height: 520px; min-height: 120px; overflow-y: auto; }
+    .lib-row { min-height: 66px; border-bottom: 1px solid var(--line-soft); cursor: pointer; position: relative; transition: background 0.12s; }
+    .lib-row:hover { background: #fbfaf7; }
+    .lib-row.active { background: var(--sapphire-soft); }
+    .lib-row.active::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sapphire); }
+    .ftype { font-size: 10.5px; letter-spacing: 0.1em; font-weight: 700; color: #fff; background: var(--sapphire); border: 1px solid var(--sapphire); border-radius: 3px; padding: 2px 0; text-align: center; width: 44px; }
+    .ftype.h5 { color: #fff; background: var(--gold); border-color: var(--gold); }
+    .fname { font-weight: 700; font-size: 14px; color: var(--ink); word-break: break-all; line-height: 1.35; }
+    .fsub { font-size: 12px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cell { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .status { display: flex; gap: 12px; font-size: 12px; letter-spacing: 0.04em; }
+    .status span { display: inline-flex; align-items: center; gap: 5px; color: var(--faint); }
+    .status span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--faint); }
+    .status span.ok { color: var(--ok); }
+    .status span.ok::before { background: var(--ok); border-color: var(--ok); }
+    .row-actions { display: flex; gap: 14px; justify-content: flex-end; flex-wrap: nowrap; white-space: nowrap; }
+    .lib-row { padding-top: 12px; padding-bottom: 12px; }
+    .empty-state { padding: 54px 24px; text-align: center; color: var(--muted); font-size: 13.5px; line-height: 1.8; }
+
+    @media (max-width: 1200px) {
+      .lib-head, .lib-row { grid-template-columns: 54px minmax(0, 1fr) 124px 200px; }
+      .lib-head .c-size, .lib-row .c-size, .lib-head .c-date, .lib-row .c-date { display: none; }
+    }
+
+    /* Routing panel */
+    .panel { padding: 24px 24px 22px; display: flex; flex-direction: column; gap: 18px; }
+    .panel h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .panel .lead { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .path-field { display: flex; flex-direction: column; gap: 7px; transition: opacity 0.2s; }
+    .label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+    .label em { font-style: normal; letter-spacing: 0.04em; text-transform: none; color: var(--gold-ink); margin-left: 6px; }
+    .input-group { display: flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--card); transition: border-color 0.15s, box-shadow 0.15s; }
+    .input-group:focus-within { border-color: var(--sapphire); box-shadow: 0 0 0 3px rgba(31, 59, 99, 0.10); }
+    .input-group input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 13px; color: var(--ink); padding: 9px 12px; }
+    .input-group input:disabled { color: var(--faint); }
+    .input-group button { border: 0; border-left: 1px solid var(--line); background: #fbfaf7; color: var(--ink-2); font-size: 12.5px; padding: 0 14px; align-self: stretch; cursor: pointer; border-radius: 0 var(--r) var(--r) 0; }
+    .input-group button:hover { background: var(--paper-2); color: var(--ink); }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .two .select { width: 100%; }
+    .rule { height: 1px; background: var(--line); margin: 2px 0; }
+
+    .switch { display: inline-flex; align-items: center; gap: 11px; cursor: pointer; font-size: 13.5px; color: var(--ink-2); user-select: none; }
+    .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .switch-track { width: 34px; height: 20px; border-radius: 999px; background: var(--line-strong); position: relative; transition: background 0.18s; flex-shrink: 0; }
+    .switch-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.18s; }
+    .switch input:checked + .switch-track { background: var(--sapphire); }
+    .switch input:checked + .switch-track::after { transform: translateX(14px); }
+    .switch input:focus-visible + .switch-track { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .panel-actions { display: flex; gap: 10px; }
+    .panel-actions .btn { flex: 1; }
+
+    .note { font-size: 12.5px; color: var(--muted); line-height: 1.7; padding: 14px 16px; background: var(--gold-soft); border-left: 2px solid var(--gold); border-radius: 0 var(--r) var(--r) 0; }
+
+    /* ---------------- Results ---------------- */
+    .tabs-head { display: flex; gap: 32px; padding: 0 28px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .tab-btn { border: 0; background: none; cursor: pointer; padding: 18px 0 15px; font-size: 14.5px; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active { color: var(--sapphire); border-bottom: 3px solid var(--sapphire); }
+    .tab-count { font-weight: 400; color: var(--muted); margin-left: 4px; font-size: 12.5px; }
+    .tab-pane { display: none; padding: 20px 28px 26px; }
+    .tab-pane.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+    th { font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+    tbody tr:hover td { background: #fbfaf7; }
+    .score { display: inline-block; min-width: 46px; text-align: center; padding: 2px 10px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+    .log-box { max-height: 260px; overflow-y: auto; font-size: 13px; }
+    .log-row { display: grid; grid-template-columns: 90px 90px minmax(0, 1fr); gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+    .log-row:last-child { border-bottom: 0; }
+
+    pre { margin: 0; background: #fbfaf7; border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; overflow: auto; max-height: 360px; font-family: Consolas, "DengXian", monospace; font-size: 12.5px; color: #2b3140; white-space: pre-wrap; line-height: 1.7; }
+
+    /* ---------------- Dialogs ---------------- */
+    dialog { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-lg); max-width: 760px; width: 92vw; padding: 0; box-shadow: var(--shadow-float); }
+    dialog::backdrop { background: rgba(22, 24, 29, 0.32); backdrop-filter: blur(4px); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 28px 16px; border-bottom: 1px solid var(--line); }
+    .modal-head h3 { margin: 0; font-size: 18px; font-weight: 700; }
+    .modal-body { padding: 22px 28px; max-height: 75vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .modal-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 28px; border-top: 1px solid var(--line); background: #fcfbf9; flex-wrap: wrap; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 680px) { .form-grid { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+    .field > label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+    .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 999; display: none; max-width: 560px; padding: 12px 22px; border-radius: 999px; font-size: 13.5px; color: #fff; background: var(--ink); box-shadow: var(--shadow-float); }
+
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: #dcd8cf; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; letter-spacing: 0.04em; }
+
+    @media (max-width: 900px) {
+      .topnav-inner { padding: 0 20px; gap: 18px; }
+      .navlinks { display: none; }
+      .page { padding: 0 20px 48px; }
+      .hero h1 { font-size: 34px; }
+    }
+
+    /* ---------------- Data conversion (primary section) ---------------- */
+    .convert { display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
+    @media (max-width: 1100px) { .convert { grid-template-columns: 1fr; } }
+    .convert-form { padding: 30px 32px 26px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+    .flow { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: end; gap: 8px; }
+    @media (max-width: 900px) { .flow { grid-template-columns: 1fr; } .flow-arrow { transform: rotate(90deg); justify-self: center; } }
+    .flow-arrow { display: grid; place-items: center; height: 48px; }
+    .label .step { display: block; font-size: 11px; letter-spacing: 0.2em; color: var(--gold-ink); margin-bottom: 4px; }
+    .input-group.lg input { font-size: 14px; padding: 13px 14px; }
+    .input-group.lg button { padding: 0 18px; font-size: 13px; }
+    .convert-opts { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; padding-top: 22px; border-top: 1px solid var(--line-soft); }
+    .opt { display: flex; flex-direction: column; gap: 7px; }
+    .opt .select { min-width: 170px; }
+    .convert-opts .switch { padding-bottom: 9px; }
+    .opt-actions { margin-left: auto; display: flex; gap: 6px; }
+
+    .convert-run { border-left: 1px solid var(--line); background: linear-gradient(180deg, #fcfbf8, #f9f7f2); padding: 30px 28px 26px; display: flex; flex-direction: column; gap: 16px; border-radius: 0 var(--r-lg) var(--r-lg) 0; }
+    @media (max-width: 1100px) { .convert-run { border-left: 0; border-top: 1px solid var(--line); border-radius: 0 0 var(--r-lg) var(--r-lg); } }
+    .run-k { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #ffffff; }
+    .run-btn { width: 100%; padding: 15px 18px; font-size: 15.5px; letter-spacing: 0.04em; border-radius: var(--r); }
+    .run-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
+    .meter-lg { height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; }
+    .meter-lg span { display: block; height: 100%; width: 0; background: var(--gold); transition: width 0.6s ease; }
+    .convert-run .watch { align-self: flex-start; }
+    .run-note { font-size: 12.5px; color: var(--muted); line-height: 1.7; }
+
+    .section-head h2.minor { font-size: 17px; }
+    .section-head h2 .hint { font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0.02em; }
+
+    /* ---- contrast pass: royal-blue conversion panel ---- */
+    .convert-run { background: linear-gradient(160deg, #1e40af 0%, #1d4ed8 60%, #2563eb 100%); border-left: 0; color: #e6edff; }
+    .convert-run .run-row { color: #dbe5ff; font-weight: 700; }
+    .convert-run .meter-lg { background: rgba(255, 255, 255, 0.22); }
+    .convert-run .meter-lg span { background: #ff922b; }
+    .convert-run .rule { background: rgba(255, 255, 255, 0.18); }
+    .convert-run .run-note { color: #c7d5ff; }
+    .run-btn.btn.dark { background: #f76707; border-color: #f76707; color: #fff; font-weight: 700; box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.45); }
+    .run-btn.btn.dark:hover { background: #e8590c; border-color: #e8590c; }
+    .run-btn.btn.dark .sub { color: #fff1e3; }
+    .convert-run .watch { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.35); color: #ffffff; font-weight: 700; }
+    .convert-run .watch .dot { background: rgba(255, 255, 255, 0.55); }
+    .convert-run .watch.on { background: #ffffff; border-color: #ffffff; color: var(--ok); }
+    .convert-run .watch.on .dot { background: var(--ok); }
+    .card { border-color: var(--line); }
+    .section-head h2 { color: var(--ink); }
+    .section-head h2:not(.minor)::before { content: ""; display: inline-block; width: 5px; height: 20px; background: var(--gold); border-radius: 2px; margin-right: 2px; align-self: center; }
+    .stat:nth-child(2) .v { color: var(--sapphire); }
+    .stat:nth-child(3) .v { color: var(--gold-ink); }
+    .readout-live { font-weight: 700; }
+    .qc { background: #f7f9fc; }
+    .convert-form { justify-content: center; }
+
+    /* ================= v5 pass: midnight + amber palette, tighter rhythm, larger type ================= */
+    :root { --navy: #0f1f45; --navy-2: #1b2f66; }
+    body { font-size: 15.5px; }
+
+    /* Navy header */
+    .topnav { background: var(--navy); border-bottom: 0; box-shadow: 0 2px 12px rgba(10, 20, 40, 0.18); }
+    .topnav-inner { height: 62px; }
+    .brand { color: #fff; }
+    .brand-mark { border-color: rgba(255, 255, 255, 0.85); }
+    .brand-mark svg { stroke: #ffffff; }
+    .brand-name { font-size: 18px; }
+    .brand-name small { color: #9fb0d4; }
+    .navlinks a { color: #c3cde3; font-size: 15px; }
+    .navlinks a:hover { color: #fff; }
+    .navlinks a.active { color: #fff; border-bottom: 3px solid var(--gold); }
+    .nav-actions .btn.text { color: #dbe3f3; font-size: 14.5px; }
+    .nav-actions .btn.text:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+
+    /* Tighter vertical rhythm */
+    .hero { padding: 30px 0 22px; gap: 32px; }
+    .hero h1 { font-size: 40px; margin: 10px 0 8px; }
+    .hero p { font-size: 15.5px; }
+    .section-head { margin: 26px 0 12px; }
+    .section-head h2 { font-size: 22px; }
+    .section-head h2.minor { font-size: 19px; }
+    .section-head .aside { font-size: 14px; }
+    footer { margin-top: 30px; font-size: 13.5px; }
+    .page { padding-bottom: 40px; }
+
+    /* Larger type */
+    .eyebrow { font-size: 13px; }
+    .stat { padding: 0 26px; }
+    .stat .k { font-size: 13px; }
+    .stat .v { font-size: 44px; }
+    .stat .v small { font-size: 15px; }
+    .btn { font-size: 14.5px; }
+    .btn.sm { font-size: 13.5px; }
+    .btn.link { font-size: 14.5px; }
+    .label { font-size: 13px; }
+    .label .step { font-size: 12px; }
+    .label em { font-size: 13px; }
+    .field-input, .select, .modal-input { font-size: 15px; }
+    .input-group input { font-size: 14.5px; }
+    .input-group.lg input { font-size: 15px; padding: 12px 14px; }
+    .input-group button, .input-group.lg button { font-size: 14px; }
+    .switch { font-size: 15px; }
+    .lib-head { font-size: 12.5px; height: 42px; }
+    .fname { font-size: 15.5px; }
+    .fsub { font-size: 13px; }
+    .cell { font-size: 14.5px; }
+    .status { font-size: 13.5px; }
+    .ftype { font-size: 11.5px; width: 50px; padding: 3px 0; }
+    .lib-row { min-height: 60px; padding-top: 10px; padding-bottom: 10px; }
+    .lib-head, .lib-row { grid-template-columns: 60px minmax(0, 1fr) 84px 156px 140px 230px; }
+    .tag { font-size: 13.5px; }
+    .pattern-head h3 { font-size: 19px; }
+    .legend, .readout { font-size: 14px; }
+    .qc-k { font-size: 12.5px; }
+    .qc-verdict { font-size: 17px; }
+    .qc-rec { font-size: 14px; }
+    .qc-metrics .v { font-size: 26px; }
+    .peak-table { font-size: 14.5px; }
+    .tab-btn { font-size: 16px; }
+    .tab-count { font-size: 14px; }
+    table { font-size: 15px; }
+    th { font-size: 12.5px; }
+    .log-box { font-size: 14px; }
+    .run-k { font-size: 13px; }
+    .run-row { font-size: 14.5px; }
+    .run-note { font-size: 14px; }
+    .watch { font-size: 14.5px; }
+    .note { font-size: 14px; }
+    .modal-head h3 { font-size: 20px; }
+    .field > label { font-size: 13px; }
+    pre { font-size: 13.5px; }
+    .toast { font-size: 15px; }
+
+    /* Conversion card: compact, navy run panel with amber action */
+    .convert-form { padding: 24px 28px 22px; gap: 20px; }
+    .convert-opts { padding-top: 18px; }
+    .convert-run { background: linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%); padding: 24px 26px; gap: 14px; }
+    .convert-run .meter-lg span { background: var(--gold); }
+    .run-btn.btn.dark { background: linear-gradient(180deg, #ffb52e 0%, #f59f00 100%); border-color: #f59f00; color: var(--navy); font-size: 17px; padding: 14px 18px; box-shadow: 0 10px 24px -10px rgba(245, 159, 0, 0.8); }
+    .run-btn.btn.dark:hover { background: linear-gradient(180deg, #ffc24d 0%, #ffab12 100%); border-color: #ffab12; }
+    .run-btn.btn.dark .sub { color: rgba(15, 31, 69, 0.7); font-size: 13px; }
+    .convert-run .watch.on { color: var(--ok); }
+    .flow-arrow svg { stroke: var(--gold); }
+
+    /* Section accent + stats */
+    .section-head h2:not(.minor)::before { background: var(--gold); width: 5px; height: 22px; }
+    .stat:nth-child(3) .v { color: var(--gold-ink); }
+    .stat .meter span { background: var(--sapphire); }
+    .hero h1 b { color: var(--sapphire); }
+
+    /* File type chips */
+    .ftype { background: var(--sapphire); border-color: var(--sapphire); color: #fff; }
+    .ftype.h5 { background: var(--navy); border-color: var(--navy); color: #ffd27a; }
+    .lib-row.active { background: #e9efff; }
+    .lib-row.active::before { background: var(--sapphire); }
+    .btn.link.gold { color: var(--gold-ink); }
+
+    /* Tabs + cards */
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
+    .card { box-shadow: 0 1px 2px rgba(10, 20, 40, 0.04), 0 10px 28px -14px rgba(10, 20, 40, 0.18); }
+    .qc { background: #f6f8fc; }
+    .peak-table td:first-child { color: var(--gold-ink); font-weight: 700; }
+    @media (max-width: 1200px) {
+      .lib-head, .lib-row { grid-template-columns: 60px minmax(0, 1fr) 140px 230px; }
+    }
+
+    /* ---- format + wavelength controls ---- */
+    .convert-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+    @media (max-width: 1000px) { .convert-grid { grid-template-columns: 1fr; } }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { position: relative; display: inline-flex; align-items: center; cursor: pointer; user-select: none; }
+    .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .chip span { display: inline-block; padding: 8px 15px; border: 1.5px solid var(--line-strong); border-radius: 999px; font-size: 14.5px; font-weight: 700; color: var(--ink-2); background: #fff; transition: all 0.15s; font-variant-numeric: tabular-nums; }
+    .chip:hover span { border-color: var(--sapphire); color: var(--sapphire); }
+    .chip input:checked + span { background: var(--sapphire); border-color: var(--sapphire); color: #fff; box-shadow: 0 4px 10px -4px rgba(36, 86, 232, 0.6); }
+    .chip input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .chip.disabled { cursor: not-allowed; }
+    .chip.disabled span { border-style: dashed; color: var(--faint); background: transparent; }
+    .chip.disabled:hover span { border-color: var(--line-strong); color: var(--faint); }
+    .wl-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .wl-row .select { flex: 1; min-width: 160px; }
+    .wl-arrow { font-size: 20px; font-weight: 700; color: var(--gold-ink); }
+    .run-btn.btn { flex-direction: column; gap: 2px; line-height: 1.2; white-space: normal; }
+    .run-btn .sub { display: block; font-weight: 700; }
+    .stale-banner { background: #fff4e0; border: 1.5px solid #f59f00; color: #7a3d00; border-radius: 6px; padding: 12px 16px; font-size: 14.5px; font-weight: 700; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <!-- ================= Header ================= -->
+  <header class="topnav">
+    <div class="topnav-inner">
+      <a class="brand" href="#top" onclick="navTo('top'); return false;">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16181d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 16h3.2l1.8-4.5 2 6 2.6-13 2.4 11.5 1.6-4 1.3 4H21.5"/>
+          </svg>
+        </span>
+        <span class="brand-name">XRD Data Bridge<small>Self-driving Lab</small></span>
+      </a>
+      <nav class="navlinks">
+        <a href="#sec-convert" data-nav="convert" class="active" onclick="navTo('convert'); return false;">Conversion</a>
+        <a href="#sec-library" data-nav="library" onclick="navTo('library'); return false;">Scan library</a>
+        <a href="#sec-pattern" data-nav="pattern" onclick="navTo('pattern'); return false;">Pattern</a>
+        <a href="#sec-results" data-nav="results" onclick="navTo('results'); return false;">Results</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn text" onclick="openSetupModal()">ICDD Guide</button>
+        <button class="btn text" onclick="openSettings()">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page" id="top">
+    <!-- ================= Hero ================= -->
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Self-driving Lab · X-ray Diffraction</div>
+        <h1>Raw scans in. <b>Any format out.</b></h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Scans</div><div class="v tabular" id="kpiTotal">0</div></div>
+        <div class="stat">
+          <div class="k">Converted</div>
+          <div class="v tabular"><span id="kpiReady">0</span><small id="kpiReadyPct">0%</small></div>
+          <div class="meter"><span id="kpiBar"></span></div>
+        </div>
+        <div class="stat"><div class="k">Pending</div><div class="v tabular" id="kpiPending">0</div></div>
+        <div class="stat"><div class="k">ICDD matches</div><div class="v tabular" id="kpiPhases">0</div></div>
+      </div>
+    </section>
+
+    <!-- ================= Data conversion (primary) ================= -->
+    <div class="section-head" id="sec-convert">
+      <h2>Data conversion</h2>
+      <div class="aside">Raw files are never modified</div>
+    </div>
+    <section class="card convert">
+      <div class="convert-form">
+        <div id="staleServer" class="stale-banner" style="display:none;">The bridge server running now is an older version, so format and wavelength options cannot be saved. Close the bridge's black console window and double-click <b>start_xrd_bridge.bat</b> again.</div>
+        <div class="flow">
+          <div class="path-field">
+            <label class="label" for="inputDir"><span class="step">Source</span>Raw data folder <em>.hdf5 · .xrdml · .xy · .asc · .dat</em></label>
+            <div class="input-group lg">
+              <input id="inputDir" type="text" placeholder="Select the raw XRD data folder..." />
+              <button onclick="browseFolder('input_dir')">Browse</button>
+            </div>
+          </div>
+          <div class="flow-arrow" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59f00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M14 7l5 5-5 5"/></svg>
+          </div>
+          <div class="path-field" id="customOutWrap">
+            <label class="label" for="customOutputDir"><span class="step">Destination</span>HighScore output folder <em>mirrors subfolders</em></label>
+            <div class="input-group lg">
+              <input id="customOutputDir" type="text" placeholder="e.g. C:\HighScore_Inbox" />
+              <button onclick="browseFolder('custom_output_dir')">Browse</button>
+            </div>
+          </div>
+        </div>
+        <div class="convert-grid">
+          <div class="opt">
+            <span class="label">Output formats <em>pick one or more</em></span>
+            <div class="chips" id="formatChips">
+              <label class="chip"><input type="checkbox" value="xrdml" onchange="onFormatsChange()" /><span>.xrdml</span></label>
+              <label class="chip"><input type="checkbox" value="asc" onchange="onFormatsChange()" /><span>.asc</span></label>
+              <label class="chip"><input type="checkbox" value="xy" onchange="onFormatsChange()" /><span>.xy</span></label>
+              <label class="chip"><input type="checkbox" value="dat" onchange="onFormatsChange()" /><span>.dat</span></label>
+              <label class="chip disabled" title="Binary .raw / .rd need a sample file from your instrument before they can be enabled"><input type="checkbox" disabled /><span>.raw</span></label>
+              <label class="chip disabled" title="Binary .raw / .rd need a sample file from your instrument before they can be enabled"><input type="checkbox" disabled /><span>.rd</span></label>
+            </div>
+          </div>
+          <div class="opt">
+            <span class="label">Wavelength <em>re-map 2θ by Bragg's law</em></span>
+            <div class="wl-row">
+              <select id="anodeSelect" class="select" onchange="saveConfig()" title="Anode the data was measured with">
+                <option value="Cu">Cu Kα1 · 1.5406 Å</option>
+                <option value="Co">Co Kα1 · 1.7890 Å</option>
+                <option value="Mo">Mo Kα1 · 0.7093 Å</option>
+                <option value="Cr">Cr Kα1 · 2.2898 Å</option>
+                <option value="Fe">Fe Kα1 · 1.9360 Å</option>
+                <option value="Ag">Ag Kα1 · 0.5594 Å</option>
+              </select>
+              <span class="wl-arrow" aria-hidden="true">→</span>
+              <select id="targetAnodeSelect" class="select" onchange="saveConfig()" title="Convert to this anode">
+                <option value="">Keep original</option>
+                <option value="Cu">Cu Kα1 · 1.5406 Å</option>
+                <option value="Co">Co Kα1 · 1.7890 Å</option>
+                <option value="Mo">Mo Kα1 · 0.7093 Å</option>
+                <option value="Cr">Cr Kα1 · 2.2898 Å</option>
+                <option value="Fe">Fe Kα1 · 1.9360 Å</option>
+                <option value="Ag">Ag Kα1 · 0.5594 Å</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="convert-opts">
+          <label class="opt">
+            <span class="label">Output folder</span>
+            <select id="outputMode" class="select" onchange="toggleCustomOut(); saveConfig()">
+              <option value="custom_dir">Separate folder</option>
+              <option value="same_dir">Same folder</option>
+            </select>
+          </label>
+          <label class="switch">
+            <input id="includeSubfolders" type="checkbox" onchange="saveConfig()" />
+            <span class="switch-track"></span>
+            <span>Mirror user subfolders</span>
+          </label>
+          <div class="opt-actions">
+            <button class="btn" onclick="saveConfig()">Save paths</button>
+            <button class="btn text" onclick="openSettings()">Advanced settings</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="convert-run">
+        <div class="run-k">Run conversion</div>
+        <button class="btn dark run-btn" onclick="convertAll()">Convert All <span class="sub" id="runSub">.xrdml + .asc</span></button>
+        <div class="run-progress">
+          <div class="run-row"><span>Converted</span><span class="tabular" id="runReady">0 / 0</span></div>
+          <div class="meter-lg"><span id="runBar"></span></div>
+        </div>
+        <div class="rule"></div>
+        <button id="watchBtn" class="watch" onclick="toggleWatch()">
+          <span id="watchDot" class="dot"></span>
+          <span id="watchLabel">Live watch: Off</span>
+        </button>
+        <div class="run-note">With live watch on, new scans are converted automatically as soon as they land in the raw folder.</div>
+      </aside>
+    </section>
+
+    <!-- ================= Library ================= -->
+    <div class="section-head" id="sec-library">
+      <h2>Scan library</h2>
+      <div class="aside">
+        <span id="folderCountBadge" class="tabular">0 files</span>
+        <button id="convertSubBtn" class="btn sm" onclick="convertSelectedFolder()" style="display:none;">Convert folder</button>
+        <button class="btn sm" onclick="refreshState()">Refresh</button>
+      </div>
+    </div>
+    <section class="card">
+      <div class="lib-tools">
+        <select id="subfolderFilter" class="select" onchange="renderFiles(currentState ? currentState.sources : [])" style="min-width: 220px;">
+          <option value="">All users / subfolders</option>
+        </select>
+        <input id="fileSearch" class="field-input" type="text" placeholder="Search filename..." oninput="renderFiles(currentState ? currentState.sources : [])" style="flex:1; min-width: 180px;" />
+      </div>
+      <div class="lib-head">
+        <span>Type</span>
+        <span>Scan</span>
+        <span class="c-size r">Size</span>
+        <span class="c-date">Modified</span>
+        <span>Outputs</span>
+        <span class="r">Actions</span>
+      </div>
+      <div id="scanList" class="scan-list"></div>
+    </section>
+
+    <!-- ================= Pattern (secondary) ================= -->
+    <div class="section-head" id="sec-pattern">
+      <h2 class="minor">Diffraction pattern <span class="hint">preview of the selected scan</span></h2>
+      <div class="aside"><span id="plotMeta" class="tag tabular">Select a scan to inspect</span></div>
+    </div>
+    <section class="card pattern">
+      <div class="pattern-main">
+        <div class="pattern-head">
+          <div>
+            <h3 id="plotTitle">Diffraction Pattern Preview</h3>
+          </div>
+          <span class="legend"><span><i class="ln"></i>Intensity</span><span><i class="pk"></i>Top peaks</span></span>
+        </div>
+        <canvas id="xrdCanvas"></canvas>
+        <div class="readout">
+          <span id="hoverReadout" class="readout-live">Hover pattern to inspect 2θ, Intensity, and Bragg d-spacing</span>
+          <span>Top peaks annotated</span>
+        </div>
+      </div>
+      <aside id="qcBox" class="qc">
+        <div>
+          <div class="qc-k">Autonomous QC</div>
+          <div class="qc-empty" style="margin-top:10px;">Select a scan to run the quality check.</div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ================= Results ================= -->
+    <div class="section-head" id="sec-results">
+      <h2 class="minor">Results &amp; records</h2>
+    </div>
+    <section class="card">
+      <div class="tabs-head" role="tablist">
+        <button class="tab-btn active" data-tab="phases" onclick="switchTab('phases')">ICDD Phase Results <span id="phaseCountBadge" class="tab-count tabular">(0)</span></button>
+        <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">Activity Log <span id="logCountBadge" class="tab-count tabular">(0)</span></button>
+        <button class="tab-btn" data-tab="xrdml" onclick="switchTab('xrdml')">XRDML Header</button>
+      </div>
+      <div id="tab-phases" class="tab-pane active">
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Sample</th>
+                <th>ICDD RefCode</th>
+                <th>Compound Name</th>
+                <th>Formula</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody id="phaseTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="tab-logs" class="tab-pane">
+        <div id="logList" class="log-box"></div>
+      </div>
+      <div id="tab-xrdml" class="tab-pane">
+        <pre id="xrdmlPreviewPre">Select a converted scan to inspect the generated XRDML v1.3 XML header.</pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>XRD Data Bridge · local XRD format converter</span>
+      <span>XRDML v1.3 · non-destructive conversion</span>
+    </footer>
+  </main>
+
+  <!-- Advanced Settings Modal -->
+  <dialog id="settingsDialog">
+    <div class="modal-head">
+      <h3>Advanced HighScore &amp; HDF5 Settings</h3>
+      <button class="btn text sm" onclick="closeSettings()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field full">
+          <label for="highscoreExe">HighScorePlus.exe / DataViewer.exe path</label>
+          <div class="row" style="flex-wrap:nowrap;">
+            <input id="highscoreExe" class="modal-input" type="text" style="flex:1;" placeholder="e.g. C:\Program Files\PANalytical\HighScore Plus\HighScorePlus.exe" />
+            <button class="btn" onclick="browseExe()">Browse .exe</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ascFlavor">.asc output format</label>
+          <select id="ascFlavor" class="modal-input select">
+            <option value="panalytical_2col">PANalytical 2-Col ASCII (Default)</option>
+            <option value="rigaku_asc">Rigaku Header Format (*TYPE_RAW)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Auto-launch behavior</label>
+          <label class="switch" style="padding-top: 8px;">
+            <input id="autoLaunch" type="checkbox" />
+            <span class="switch-track"></span>
+            <span>Auto-open .xrdml in HighScore</span>
+          </label>
+        </div>
+        <div class="field">
+          <label for="angleDs">HDF5 2Theta dataset override (optional)</label>
+          <input id="angleDs" class="modal-input" type="text" placeholder="Leave blank for auto-detection" />
+        </div>
+        <div class="field">
+          <label for="intensityDs">HDF5 intensity dataset override (optional)</label>
+          <input id="intensityDs" class="modal-input" type="text" placeholder="Leave blank for auto-detection" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="generateDemo()">Generate demo data</button>
+      <div class="row">
+        <button class="btn" onclick="closeSettings()">Cancel</button>
+        <button class="btn dark" onclick="saveConfig(true)">Save &amp; close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- HDF5 Tree Modal -->
+  <dialog id="h5Dialog">
+    <div class="modal-head">
+      <h3 id="h5DialogTitle">HDF5 Internal Structure</h3>
+      <button class="btn text sm" onclick="document.getElementById('h5Dialog').close()">Close</button>
+    </div>
+    <div class="modal-body">
+      <pre id="h5TreePre"></pre>
+    </div>
+  </dialog>
+
+  <!-- Setup Guide & Pascal Script Modal -->
+  <dialog id="setupDialog">
+    <div class="modal-head">
+      <h3>HighScore Plus ICDD Setup Guide &amp; Pascal Script</h3>
+      <button class="btn text sm" onclick="document.getElementById('setupDialog').close()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div style="color: var(--muted); font-size: 13px;">Local files: xrd_sdl_bridge/highscore_scripts/HIGHSCORE_SETUP_GUIDE.md &amp; auto_search_match_icdd.pas</div>
+      <pre id="guideMdPre"></pre>
+      <pre id="pascalPre"></pre>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let currentState = null;
+    let currentPreview = null;
+    let selectedSourcePath = "";
+    let showAllRows = false;
+    const PLOT_PAD_L = 74, PLOT_PAD_R = 16;
+    const FONT = '"DengXian", "等线", "Microsoft YaHei UI", sans-serif';
+    const FONT_LIGHT = '"DengXian Light", "DengXian", "等线", sans-serif';
+
+    // Clear theme keys left by earlier builds (this design is light-only).
+    try { localStorage.removeItem("xrdTheme"); localStorage.removeItem("xrdThemeChoice"); } catch (e) {}
+
+    function navTo(key) {
+      document.querySelectorAll(".navlinks a").forEach(a => a.classList.toggle("active", a.dataset.nav === key));
+      if (key === "top") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      const el = document.getElementById(`sec-${key}`);
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 84;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.style.display = "block";
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => { el.style.display = "none"; }, 4000);
+    }
+
+    async function api(url, opts = {}) {
+      const token = (document.querySelector('meta[name="bridge-token"]') || {}).content || "";
+      const res = await fetch(url, {
+        ...opts,
+        headers: { "Content-Type": "application/json", "X-Bridge-Token": token },
+      });
+      if (res.status === 401) {
+        throw new Error("Session expired (the bridge was restarted) - please reload the page");
+      }
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      return data;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function openSettings() {
+      if (currentState) syncFormFromConfig(currentState.config);
+      document.getElementById("settingsDialog").showModal();
+    }
+
+    function closeSettings() {
+      document.getElementById("settingsDialog").close();
+    }
+
+    function toggleCustomOut() {
+      const mode = document.getElementById("outputMode").value;
+      const isCustom = mode === "custom_dir";
+      document.getElementById("customOutWrap").style.opacity = isCustom ? "1" : "0.45";
+      document.getElementById("customOutputDir").disabled = !isCustom;
+    }
+
+    function selectedFormats() {
+      return [...document.querySelectorAll('#formatChips input[value]:checked')].map(cb => cb.value);
+    }
+
+    function onFormatsChange() {
+      const boxes = [...document.querySelectorAll('#formatChips input[value]')];
+      if (!boxes.some(b => b.checked)) {  // keep at least one format selected
+        boxes[0].checked = true;
+        showToast("Select at least one output format");
+      }
+      boxes.forEach(b => b.closest(".chip").classList.toggle("on", b.checked));
+      saveConfig();
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === name);
+      });
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        pane.classList.toggle("active", pane.id === `tab-${name}`);
+      });
+    }
+
+    function syncFormFromConfig(c) {
+      const inEl = document.getElementById("inputDir");
+      if (document.activeElement?.id !== "inputDir") {
+        inEl.value = c.input_dir || "";
+        inEl.title = c.input_dir || "";
+      }
+      const outEl = document.getElementById("customOutputDir");
+      if (document.activeElement?.id !== "customOutputDir") {
+        outEl.value = c.custom_output_dir || "";
+        outEl.title = c.custom_output_dir || "";
+      }
+      document.getElementById("outputMode").value = c.output_mode || "same_dir";
+      document.getElementById("includeSubfolders").checked = c.include_subfolders !== false;
+      document.getElementById("anodeSelect").value = c.anode || "Cu";
+      document.getElementById("targetAnodeSelect").value = c.target_anode || "";
+      const stale = !Array.isArray(c.output_formats);
+      document.getElementById("staleServer").style.display = stale ? "block" : "none";
+      document.querySelectorAll('#formatChips input[value], #targetAnodeSelect').forEach(el => { el.disabled = stale; });
+      const fmts = c.output_formats || ["xrdml", "asc"];
+      document.querySelectorAll('#formatChips input[value]').forEach(cb => {
+        cb.checked = fmts.includes(cb.value);
+        cb.closest(".chip").classList.toggle("on", cb.checked);
+      });
+      const tgt = c.target_anode && c.target_anode !== c.anode ? ` · → ${c.target_anode}` : "";
+      document.getElementById("runSub").textContent = fmts.map(f => "." + f).join(" + ") + tgt;
+      document.getElementById("ascFlavor").value = c.asc_flavor || "panalytical_2col";
+      if (document.activeElement?.id !== "highscoreExe") {
+        document.getElementById("highscoreExe").value = c.highscore_exe || "";
+      }
+      document.getElementById("autoLaunch").checked = !!c.auto_launch_highscore;
+      if (document.activeElement?.id !== "angleDs") {
+        document.getElementById("angleDs").value = c.angle_dataset_override || "";
+      }
+      if (document.activeElement?.id !== "intensityDs") {
+        document.getElementById("intensityDs").value = c.intensity_dataset_override || "";
+      }
+      toggleCustomOut();
+    }
+
+    function applyState(st) {
+      currentState = st;
+      const c = st.config;
+      syncFormFromConfig(c);
+
+      const srcs = st.sources || [];
+      const readyCount = srcs.filter(s => s.ready).length;
+      const phases = st.phase_reports || [];
+      const subs = st.subfolders || [];
+      document.getElementById("folderCountBadge").textContent = `${srcs.length} files · ${readyCount} ready`;
+
+      const pct = srcs.length ? Math.round((readyCount / srcs.length) * 100) : 0;
+      document.getElementById("kpiTotal").textContent = srcs.length;
+      document.getElementById("kpiReady").textContent = readyCount;
+      document.getElementById("kpiReadyPct").textContent = `${pct}%`;
+      document.getElementById("kpiBar").style.width = `${pct}%`;
+      document.getElementById("kpiPending").textContent = srcs.length - readyCount;
+      document.getElementById("kpiPhases").textContent = phases.length;
+      document.getElementById("runReady").textContent = `${readyCount} / ${srcs.length}`;
+      document.getElementById("runBar").style.width = `${pct}%`;
+
+      const wBtn = document.getElementById("watchBtn");
+      const wDot = document.getElementById("watchDot");
+      const wLbl = document.getElementById("watchLabel");
+      if (c.watch_enabled) {
+        wBtn.className = "watch on";
+        wDot.className = "dot dot-pulse";
+        wLbl.textContent = "Live watch: On";
+      } else {
+        wBtn.className = "watch";
+        wDot.className = "dot";
+        wLbl.textContent = "Live watch: Off";
+      }
+
+      const sel = document.getElementById("subfolderFilter");
+      const prevSel = sel.value;
+      sel.innerHTML = '<option value="">All users / subfolders</option>' +
+        subs.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+      if (subs.includes(prevSel)) sel.value = prevSel;
+
+      renderFiles(srcs);
+      renderPhases(phases);
+      renderLogs(st.logs || []);
+    }
+
+    function renderFiles(sources) {
+      const listEl = document.getElementById("scanList");
+      const subFilt = document.getElementById("subfolderFilter").value;
+      const txtFilt = (document.getElementById("fileSearch").value || "").trim().toLowerCase();
+      document.getElementById("convertSubBtn").style.display = subFilt ? "inline-flex" : "none";
+
+      const filtered = (sources || []).filter(f => {
+        if (subFilt && f.top_folder !== subFilt) return false;
+        if (txtFilt && !f.name.toLowerCase().includes(txtFilt) && !(f.subfolder || "").toLowerCase().includes(txtFilt)) return false;
+        return true;
+      });
+
+      if (!filtered.length) {
+        listEl.innerHTML = '<div class="empty-state">No matching .hdf5 / .h5 / .xy scans found.<br/>Select your raw XRD folder in <strong>Data conversion</strong>, or generate demo data in <strong>Advanced settings</strong>.</div>';
+        return;
+      }
+
+      const limit = showAllRows ? filtered.length : 150;
+      const visible = filtered.slice(0, limit);
+
+      let html = visible.map(f => {
+        const isActive = f.path === selectedSourcePath;
+        const isH5 = f.ext === ".hdf5" || f.ext === ".h5";
+        const folder = f.subfolder && f.subfolder !== "." ? escapeHtml(f.subfolder) : "root";
+        const h5Btn = isH5
+          ? `<button class="btn link muted" onclick='event.stopPropagation(); inspectH5(${JSON.stringify(f.path)})'>H5 Tree</button>`
+          : "";
+        const hsBtn = f.xrdml_exists
+          ? `<button class="btn link gold" onclick='event.stopPropagation(); openInHighScore(${JSON.stringify(f.xrdml_path)})'>HighScore ↗</button>`
+          : "";
+
+        return `
+          <div class="lib-row ${isActive ? "active" : ""}" onclick='previewScan(${JSON.stringify(f.path)})'>
+            <span class="ftype ${isH5 ? "h5" : ""}">${escapeHtml(f.ext.replace(".", "").toUpperCase())}</span>
+            <div style="min-width:0;">
+              <div class="fname" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+              <div class="fsub">${folder}</div>
+            </div>
+            <span class="cell c-size r">${f.size_kb} KB</span>
+            <span class="cell c-date">${escapeHtml(f.mtime)}</span>
+            <span class="status">${Object.entries(f.outputs || {}).map(([fmt, o]) => `<span class="${o.exists ? "ok" : ""}" title="${escapeHtml(o.path)}">${fmt.toUpperCase()}</span>`).join("") || '<span>—</span>'}</span>
+            <span class="row-actions">
+              ${h5Btn}
+              <button class="btn link" onclick='event.stopPropagation(); convertOne(${JSON.stringify(f.path)})'>Convert</button>
+              ${hsBtn}
+            </span>
+          </div>
+        `;
+      }).join("");
+
+      if (filtered.length > limit) {
+        html += `<div class="empty-state" style="padding:16px;">Showing ${limit} of ${filtered.length} scans. <button class="btn sm" onclick="showAllRows=true; renderFiles(currentState.sources)">Show all (${filtered.length})</button></div>`;
+      }
+      listEl.innerHTML = html;
+    }
+
+    function renderPhases(rows) {
+      document.getElementById("phaseCountBadge").textContent = `(${rows.length})`;
+      const tbody = document.getElementById("phaseTableBody");
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted); text-align:center; padding:34px;">No HighScore phase CSV reports found yet. Optional: configure the Pascal script in ICDD Guide to collect matches here.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td style="font-weight:700;">${escapeHtml(r.Sample || "")}</td>
+          <td class="tabular">${escapeHtml(r.RefCode || "")}</td>
+          <td>${escapeHtml(r.CompoundName || "")}</td>
+          <td>${escapeHtml(r.Formula || "")}</td>
+          <td><span class="score">${escapeHtml(r.Score || "")}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderLogs(logs) {
+      document.getElementById("logCountBadge").textContent = `(${logs.length})`;
+      const box = document.getElementById("logList");
+      if (!logs.length) {
+        box.innerHTML = '<div style="color:var(--muted); padding:8px 0;">No activity yet.</div>';
+        return;
+      }
+      box.innerHTML = logs.map(l => {
+        const lvlColor = l.level === "ERROR" ? "var(--err)" : "var(--gold-ink)";
+        return `
+          <div class="log-row">
+            <span class="tabular" style="color:var(--muted);">${escapeHtml(l.time)}</span>
+            <span style="letter-spacing:0.12em; font-size:11.5px; color:${lvlColor};">${escapeHtml(l.level)}</span>
+            <span style="color:var(--ink-2);">${escapeHtml(l.message)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function refreshState() {
+      try {
+        const st = await api("/api/state");
+        applyState(st);
+        if (!currentPreview && st.sources && st.sources.length) {
+          previewScan(st.sources[0].path);
+        }
+      } catch (e) {
+        showToast("Refresh failed: " + e.message);
+      }
+    }
+
+    async function saveConfig(closeAfter = false) {
+      try {
+        const payload = {
+          input_dir: document.getElementById("inputDir").value,
+          output_mode: document.getElementById("outputMode").value,
+          custom_output_dir: document.getElementById("customOutputDir").value,
+          include_subfolders: document.getElementById("includeSubfolders").checked,
+          anode: document.getElementById("anodeSelect").value,
+          target_anode: document.getElementById("targetAnodeSelect").value,
+          output_formats: selectedFormats(),
+          asc_flavor: document.getElementById("ascFlavor").value,
+          highscore_exe: document.getElementById("highscoreExe").value,
+          auto_launch_highscore: document.getElementById("autoLaunch").checked,
+          angle_dataset_override: document.getElementById("angleDs").value,
+          intensity_dataset_override: document.getElementById("intensityDs").value,
+        };
+        const res = await api("/api/config", { method: "POST", body: JSON.stringify(payload) });
+        applyState(res.state);
+        if (closeAfter) closeSettings();
+        showToast("Settings saved");
+      } catch (e) {
+        showToast("Save failed: " + e.message);
+      }
+    }
+
+    async function browseFolder(target = "input_dir") {
+      try {
+        const res = await api("/api/browse-folder", { method: "POST", body: JSON.stringify({ target }) });
+        applyState(res.state);
+        if (res.ok) {
+          syncFormFromConfig(res.state.config);
+          showToast(target === "custom_output_dir" ? "Output folder: " + res.path : "Raw folder: " + res.path);
+          if (target === "input_dir" && res.state.sources && res.state.sources.length) {
+            previewScan(res.state.sources[0].path);
+          }
+        }
+      } catch (e) {
+        showToast("Browse failed: " + e.message);
+      }
+    }
+
+    async function browseExe() {
+      try {
+        const res = await api("/api/browse-exe", { method: "POST", body: "{}" });
+        applyState(res.state);
+        if (res.ok) {
+          syncFormFromConfig(res.state.config);
+          showToast("Selected executable: " + res.path);
+        }
+      } catch (e) {
+        showToast("Browse failed: " + e.message);
+      }
+    }
+
+    async function toggleWatch() {
+      const nextVal = !(currentState && currentState.config.watch_enabled);
+      try {
+        const res = await api("/api/config", { method: "POST", body: JSON.stringify({ watch_enabled: nextVal }) });
+        applyState(res.state);
+        showToast(nextVal ? "Live folder watch enabled" : "Live folder watch paused");
+      } catch (e) {
+        showToast("Toggle failed: " + e.message);
+      }
+    }
+
+    async function generateDemo() {
+      try {
+        const res = await api("/api/generate-demo", { method: "POST", body: "{}" });
+        applyState(res.state);
+        closeSettings();
+        showToast(`Generated ${res.created.length} demo files`);
+        if (res.state.sources.length) previewScan(res.state.sources[0].path);
+      } catch (e) {
+        showToast("Generation failed: " + e.message);
+      }
+    }
+
+    async function convertAll() {
+      try {
+        const res = await api("/api/convert-all", { method: "POST", body: "{}" });
+        applyState(res.state);
+        const cnt = res.result.converted.length;
+        const errs = res.result.errors.length;
+        showToast(`Batch conversion complete: ${cnt} succeeded, ${errs} failed (raw files untouched)`);
+        if (selectedSourcePath) previewScan(selectedSourcePath);
+      } catch (e) {
+        showToast("Conversion failed: " + e.message);
+      }
+    }
+
+    async function convertSelectedFolder() {
+      const sub = document.getElementById("subfolderFilter").value;
+      if (!sub) return convertAll();
+      try {
+        const res = await api("/api/convert-all", { method: "POST", body: JSON.stringify({ subfolder: sub }) });
+        applyState(res.state);
+        const cnt = res.result.converted.length;
+        const errs = res.result.errors.length;
+        showToast(`Converted "${sub}": ${cnt} succeeded, ${errs} failed`);
+        if (selectedSourcePath) previewScan(selectedSourcePath);
+      } catch (e) {
+        showToast("Conversion failed: " + e.message);
+      }
+    }
+
+    async function convertOne(path) {
+      try {
+        const res = await api("/api/convert-one", { method: "POST", body: JSON.stringify({ path }) });
+        applyState(res.state);
+        const made = (res.result.outputs || []).flatMap(o => Object.keys(o.files || {}));
+        const skippedN = (res.result.outputs || []).reduce((n, o) => n + (o.skipped || []).length, 0);
+        showToast(`Generated ${[...new Set(made)].map(f => "." + f).join(" + ") || "no new files"}${skippedN ? ` · ${skippedN} skipped (raw file kept)` : ""}`);
+        previewScan(path);
+      } catch (e) {
+        showToast("Conversion failed: " + e.message);
+      }
+    }
+
+    async function openInHighScore(xrdml_path) {
+      try {
+        const res = await api("/api/open-highscore", { method: "POST", body: JSON.stringify({ xrdml_path }) });
+        applyState(res.state);
+        showToast(res.message);
+      } catch (e) {
+        showToast("Launch failed: " + e.message);
+      }
+    }
+
+    async function inspectH5(path) {
+      try {
+        const data = await api(`/api/hdf5-tree?path=${encodeURIComponent(path)}`);
+        document.getElementById("h5DialogTitle").textContent = `HDF5 Structure: ${data.file}`;
+        document.getElementById("h5TreePre").textContent = JSON.stringify(data.tree, null, 2);
+        document.getElementById("h5Dialog").showModal();
+      } catch (e) {
+        showToast("Failed to inspect HDF5 tree: " + e.message);
+      }
+    }
+
+    async function openSetupModal() {
+      try {
+        const data = await api("/api/setup-guide");
+        document.getElementById("guideMdPre").textContent = data.guide_md;
+        document.getElementById("pascalPre").textContent = data.pascal_script;
+        document.getElementById("setupDialog").showModal();
+      } catch (e) {
+        showToast("Failed to load setup guide: " + e.message);
+      }
+    }
+
+    async function previewScan(path) {
+      selectedSourcePath = path;
+      if (currentState) renderFiles(currentState.sources || []);
+      try {
+        const data = await api(`/api/preview?path=${encodeURIComponent(path)}`);
+        currentPreview = data;
+        document.getElementById("plotTitle").textContent = data.name;
+        document.getElementById("plotMeta").textContent = `${data.source_format.toUpperCase()} · ${data.anode} Kα1 ${data.ka1.toFixed(4)} Å · ${data.total_points} pts`;
+        document.getElementById("xrdmlPreviewPre").textContent =
+          data.xrdml_preview || "This scan has not been converted to .xrdml yet. Click Convert to generate its XRDML v1.3 file.";
+        drawPlot(data);
+        renderQc(data.qc);
+      } catch (e) {
+        showToast("Preview failed: " + e.message);
+      }
+    }
+
+    function renderQc(qc) {
+      const box = document.getElementById("qcBox");
+      box.style.display = "flex";
+      const ok = !!qc.fit_for_analysis;
+      const peaks = (qc.top_peaks || []).slice(0, 6);
+      const rows = peaks.length
+        ? peaks.map((p, i) => `<tr><td>${String(i + 1).padStart(2, "0")}</td><td>${escapeHtml(p.two_theta)}°</td><td class="r">d = ${escapeHtml(p.d_angstrom)} Å</td></tr>`).join("")
+        : '<tr><td></td><td colspan="2" style="color:var(--muted);">None</td></tr>';
+      box.innerHTML = `
+        <div>
+          <div class="qc-k">Autonomous QC</div>
+          <div class="qc-verdict ${ok ? "" : "warn"}"><span class="badge">${ok ? "✓" : "!"}</span>${ok ? "Fit for analysis" : "Needs review"}</div>
+          <div class="qc-rec">${escapeHtml(qc.recommendation)}</div>
+        </div>
+        <div class="qc-metrics">
+          <div><div class="qc-k">SNR</div><div class="v">${escapeHtml(qc.snr_estimate)}</div></div>
+          <div><div class="qc-k">Max counts</div><div class="v">${escapeHtml(qc.max_counts)}</div></div>
+        </div>
+        <div>
+          <div class="qc-k">Major peaks</div>
+          <table class="peak-table">${rows}</table>
+        </div>
+      `;
+    }
+
+    function drawPlot(data, hoverIdx = -1) {
+      const canvas = document.getElementById("xrdCanvas");
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(320, Math.round(rect.width || 760));
+      const cssH = 300;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+      }
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cssW, cssH);
+
+      const xs = data.two_theta || [];
+      const ys = data.intensity || [];
+      if (!xs.length) return;
+
+      const C = {
+        grid: "#e9edf4", axis: "#b6c1d2", tick: "#4c5873", title: "#1f2c48",
+        trace: "#2456e8", fillTop: "rgba(36, 86, 232, 0.16)", fillBot: "rgba(36, 86, 232, 0)",
+        gold: "#f59f00", goldInk: "#c25e00", cross: "rgba(10, 20, 40, 0.35)",
+        tipBg: "#0f1f45", tipInk: "#ffffff",
+      };
+
+      const pad = { l: PLOT_PAD_L, r: PLOT_PAD_R, t: 36, b: 48 };
+      const pw = cssW - pad.l - pad.r;
+      const ph = cssH - pad.t - pad.b;
+
+      const minX = xs[0], maxX = xs[xs.length - 1];
+      let minY = Math.min(...ys), maxY = Math.max(...ys);
+      if (maxY <= minY) maxY = minY + 1;
+      const yHeadroom = maxY + (maxY - minY) * 0.16;
+
+      const toPxX = x => pad.l + ((x - minX) / (maxX - minX || 1)) * pw;
+      const toPxY = y => pad.t + ph - ((y - minY) / (yHeadroom - minY || 1)) * ph;
+
+      // Horizontal hairlines only
+      ctx.save();
+      ctx.strokeStyle = C.grid;
+      ctx.lineWidth = 1;
+      ctx.font = `13.5px ${FONT}`;
+      ctx.fillStyle = C.tick;
+      for (let i = 0; i <= 4; i++) {
+        const gy = Math.round(pad.t + (ph * i) / 4) + 0.5;
+        if (i < 4) { ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(cssW - pad.r, gy); ctx.stroke(); }
+        const val = yHeadroom - ((yHeadroom - minY) * i) / 4;
+        ctx.textAlign = "right";
+        ctx.fillText(Math.round(val).toLocaleString("en-US"), pad.l - 14, gy + 4);
+      }
+      const span = maxX - minX;
+      const tickStep = span > 60 ? 10 : span > 25 ? 5 : 2;
+      ctx.strokeStyle = C.axis;
+      for (let t = Math.ceil(minX / tickStep) * tickStep; t <= maxX; t += tickStep) {
+        const gx = Math.round(toPxX(t)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(gx, pad.t + ph); ctx.lineTo(gx, pad.t + ph + 5); ctx.stroke();
+        ctx.textAlign = "center";
+        ctx.fillText(`${t}°`, gx, pad.t + ph + 21);
+      }
+      ctx.restore();
+
+      // Baseline
+      ctx.strokeStyle = C.axis;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t + ph + 0.5);
+      ctx.lineTo(cssW - pad.r, pad.t + ph + 0.5);
+      ctx.stroke();
+
+      // Axis titles
+      ctx.fillStyle = C.title;
+      ctx.font = `13.5px ${FONT}`;
+      ctx.textAlign = "center";
+      ctx.fillText("2θ  (degrees)", pad.l + pw / 2, cssH - 4);
+      ctx.save();
+      ctx.translate(14, pad.t + ph / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("Intensity  (counts)", 0, 0);
+      ctx.restore();
+
+      // Area
+      const areaGrad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+      areaGrad.addColorStop(0, C.fillTop);
+      areaGrad.addColorStop(1, C.fillBot);
+      ctx.fillStyle = areaGrad;
+      ctx.beginPath();
+      ctx.moveTo(toPxX(xs[0]), pad.t + ph);
+      for (let i = 0; i < xs.length; i++) ctx.lineTo(toPxX(xs[i]), toPxY(ys[i]));
+      ctx.lineTo(toPxX(xs[xs.length - 1]), pad.t + ph);
+      ctx.closePath();
+      ctx.fill();
+
+      // Trace
+      ctx.strokeStyle = C.trace;
+      ctx.lineWidth = 1.6;
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < xs.length; i++) {
+        const px = toPxX(xs[i]);
+        const py = toPxY(ys[i]);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Peaks: gold diamond + label
+      const topPeaks = (data.qc && data.qc.top_peaks) ? data.qc.top_peaks.slice(0, 6) : [];
+      const placedX = [];
+      ctx.textAlign = "center";
+      for (const pk of topPeaks) {
+        const px = toPxX(pk.two_theta);
+        const py = toPxY(pk.counts);
+        if (px < pad.l + 16 || px > cssW - pad.r - 16) continue;
+        if (placedX.some(ox => Math.abs(ox - px) < 50)) continue;
+        placedX.push(px);
+
+        const dy = Math.max(pad.t - 10, py - 12);
+        ctx.fillStyle = C.gold;
+        ctx.beginPath();
+        ctx.moveTo(px, dy - 4); ctx.lineTo(px + 4, dy); ctx.lineTo(px, dy + 4); ctx.lineTo(px - 4, dy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = C.goldInk;
+        ctx.font = `13px ${FONT}`;
+        ctx.fillText(`${pk.two_theta.toFixed(2)}°`, px, dy - 10);
+      }
+
+      // Hover
+      if (hoverIdx >= 0 && hoverIdx < xs.length) {
+        const tth = xs[hoverIdx];
+        const cnt = ys[hoverIdx];
+        const px = toPxX(tth);
+        const py = toPxY(cnt);
+        const sinT = Math.sin((tth / 2) * Math.PI / 180);
+        const dVal = sinT > 1e-6 ? (data.ka1 / (2 * sinT)).toFixed(4) : "-";
+
+        ctx.strokeStyle = C.cross;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath();
+        ctx.moveTo(px, pad.t);
+        ctx.lineTo(px, pad.t + ph);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = C.trace;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        const tipText = `2θ ${tth.toFixed(3)}°   ·   ${cnt.toFixed(0)} cts   ·   d ${dVal} Å`;
+        ctx.font = `13.5px ${FONT}`;
+        const boxW = ctx.measureText(tipText).width + 26;
+        const boxH = 30;
+        const bx = Math.min(cssW - pad.r - boxW, Math.max(pad.l, px - boxW / 2));
+        const by = pad.t - 30;
+        ctx.fillStyle = C.tipBg;
+        ctx.beginPath();
+        ctx.roundRect(bx, Math.max(2, by), boxW, boxH, 15);
+        ctx.fill();
+        ctx.fillStyle = C.tipInk;
+        ctx.textAlign = "left";
+        ctx.fillText(tipText, bx + 13, Math.max(2, by) + 19.5);
+      }
+    }
+
+    document.getElementById("xrdCanvas").addEventListener("mousemove", evt => {
+      if (!currentPreview || !currentPreview.two_theta.length) return;
+      const canvas = evt.target;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(320, Math.round(rect.width || 760));
+      const relX = evt.clientX - rect.left;
+      const padL = PLOT_PAD_L, padR = PLOT_PAD_R;
+      const pw = cssW - padL - padR;
+      const xs = currentPreview.two_theta;
+      const frac = Math.min(1, Math.max(0, (relX - padL) / (pw || 1)));
+      const targetX = xs[0] + frac * (xs[xs.length - 1] - xs[0]);
+
+      let lo = 0, hi = xs.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (xs[mid] < targetX) lo = mid + 1;
+        else hi = mid;
+      }
+      const best = (lo > 0 && Math.abs(xs[lo - 1] - targetX) < Math.abs(xs[lo] - targetX)) ? lo - 1 : lo;
+      const tth = xs[best];
+      const cnt = currentPreview.intensity[best];
+      const sinT = Math.sin((tth / 2) * Math.PI / 180);
+      const dVal = sinT > 1e-6 ? (currentPreview.ka1 / (2 * sinT)).toFixed(4) : "-";
+      document.getElementById("hoverReadout").textContent =
+        `2θ = ${tth.toFixed(3)}°   ·   Intensity = ${cnt.toFixed(1)} counts   ·   d = ${dVal} Å`;
+      drawPlot(currentPreview, best);
+    });
+
+    document.getElementById("xrdCanvas").addEventListener("mouseleave", () => {
+      if (currentPreview) drawPlot(currentPreview, -1);
+    });
+
+    window.addEventListener("resize", () => {
+      if (currentPreview) drawPlot(currentPreview, -1);
+    });
+
+    refreshState();
+    setInterval(refreshState, 3000);
+  </script>
+</body>
+</html>

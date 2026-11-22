@@ -1,0 +1,27 @@
+# Bundled portable Python (shipped as a GitHub Release zip, not in the repo)
+/python/
+
+# Local settings and state (contain machine-specific paths)
+xrd_sdl_bridge/config.json
+xrd_sdl_bridge/.bridge_state.json
+
+# Generated outputs
+xrd_sdl_bridge/test_data/converted/
+_site/
+dist/
+_demo/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Local working material, not for publication
+/design_preview/
+*.pdf
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

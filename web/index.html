@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XRD Data Bridge · Online Converter</title>
+  <meta name="description" content="Convert powder XRD files (.xrdml, .xy, .asc, .dat, .hdf5) and re-map anode wavelengths in your browser. Lossless; files never leave your computer." />
+  <style>
+    :root {
+      --font: "DengXian", "等线", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif;
+      --paper: #edf1f6; --card: #ffffff; --line: #d3dbe7; --line-soft: #e5eaf1; --line-strong: #b6c1d2;
+      --ink: #0a1428; --ink-2: #1f2c48; --muted: #4c5873; --faint: #929bb0;
+      --navy: #0f1f45; --navy-2: #1b2f66; --blue: #2456e8; --blue-soft: #e6edff;
+      --amber: #f59f00; --amber-ink: #c25e00; --ok: #0b9b6d; --ok-soft: #e6f6ef; --err: #c0392b; --err-soft: #fdecea;
+      --r: 6px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 15.5px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    button, input, select { font-family: var(--font); }
+
+    header { background: var(--navy); color: #fff; box-shadow: 0 2px 12px rgba(10, 20, 40, 0.18); }
+    .bar { max-width: 1120px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; gap: 14px; }
+    .mark { width: 34px; height: 34px; border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+    .brand { font-size: 18px; font-weight: 700; line-height: 1.1; }
+    .brand small { display: block; font-size: 11px; font-weight: 400; letter-spacing: 0.2em; color: #9fb0d4; text-transform: uppercase; margin-top: 3px; }
+    .bar a { margin-left: auto; color: #dbe3f3; text-decoration: none; font-size: 14.5px; }
+    .bar a:hover { color: #fff; }
+
+    main { max-width: 1120px; margin: 0 auto; padding: 26px 20px 40px; }
+    .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber-ink); }
+    h1 { margin: 8px 0 6px; font-size: 36px; font-weight: 400; line-height: 1.15; }
+    h1 b { color: var(--blue); }
+    .lead { margin: 0 0 22px; color: var(--muted); font-size: 15.5px; }
+    .lead b { color: var(--ok); }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 1px 2px rgba(10, 20, 40, 0.04), 0 10px 28px -14px rgba(10, 20, 40, 0.18); }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .pane { padding: 24px 26px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .label { font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 8px; display: block; }
+    .label em { font-style: normal; letter-spacing: 0.02em; text-transform: none; color: var(--amber-ink); margin-left: 6px; }
+
+    .drop { display: block; border: 2px dashed var(--line-strong); border-radius: var(--r); padding: 26px 18px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; background: #fafbfd; }
+    .drop:hover, .drop.over { border-color: var(--blue); background: var(--blue-soft); }
+    .drop strong { font-size: 17px; display: block; }
+    .drop span { color: var(--muted); font-size: 14px; }
+    .files { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .files li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line-soft); border-radius: var(--r); font-size: 14.5px; }
+    .files li .ext { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #fff; background: var(--blue); border-radius: 3px; padding: 2px 6px; }
+    .files li .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+    .files li button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { position: relative; cursor: pointer; user-select: none; }
+    .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .chip span { display: inline-block; padding: 7px 15px; border: 1.5px solid var(--line-strong); border-radius: 999px; font-size: 14.5px; font-weight: 700; color: var(--ink-2); background: #fff; transition: all 0.15s; }
+    .chip input:checked + span { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .chip input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 2px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    select { font-size: 15px; color: var(--ink); background: #fff; border: 1px solid var(--line-strong); border-radius: var(--r); padding: 8px 10px; flex: 1; min-width: 150px; }
+    .arrow { font-size: 20px; font-weight: 700; color: var(--amber-ink); }
+    .hint { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+
+    .run { background: linear-gradient(165deg, var(--navy), var(--navy-2)); color: #e6edff; padding: 24px; display: flex; flex-direction: column; gap: 14px; border-radius: 0 var(--r) var(--r) 0; }
+    @media (max-width: 860px) { .run { border-radius: 0 0 var(--r) var(--r); } }
+    .run .k { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #fff; }
+    .go { border: 0; border-radius: var(--r); padding: 14px 16px; font-size: 17px; font-weight: 700; color: var(--navy); background: linear-gradient(180deg, #ffb52e, #f59f00); cursor: pointer; box-shadow: 0 10px 24px -10px rgba(245, 159, 0, 0.8); }
+    .go:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    .status { font-size: 14px; color: #c7d5ff; min-height: 22px; }
+    .safe { font-size: 13.5px; line-height: 1.7; color: #c7d5ff; border-top: 1px solid rgba(255, 255, 255, 0.18); padding-top: 12px; }
+    .safe b { color: #fff; }
+
+    h2 { font-size: 20px; margin: 28px 0 12px; display: flex; align-items: center; gap: 10px; }
+    h2::before { content: ""; width: 5px; height: 20px; background: var(--amber); border-radius: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+    th { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); background: #f7f9fc; }
+    td a { display: inline-block; margin: 0 10px 4px 0; color: var(--blue); font-weight: 700; text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .bad { color: var(--err); font-weight: 700; }
+    .note { color: var(--muted); font-size: 13px; }
+    .results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .btn { border: 1px solid var(--line-strong); background: #fff; border-radius: var(--r); padding: 8px 14px; font-size: 14.5px; font-weight: 700; cursor: pointer; color: var(--ink); }
+    .btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+    canvas { width: 100%; height: 220px; display: block; }
+
+    footer { max-width: 1120px; margin: 0 auto; padding: 0 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; color: var(--muted); font-size: 13.5px; }
+    footer .qr { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 10px; text-align: center; font-size: 12.5px; }
+    footer .qr svg { width: 132px; height: 132px; display: block; }
+    @media (max-width: 600px) { footer { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 16h3.2l1.8-4.5 2 6 2.6-13 2.4 11.5 1.6-4 1.3 4H21.5"/></svg>
+      </span>
+      <span class="brand">XRD Data Bridge<small>Online converter · 在线转换</small></span>
+      <a href="https://github.com/jliu-science/XRD-data-bridge" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="eyebrow">Powder XRD · 粉末衍射数据</div>
+    <h1>Any XRD format in. <b>The one you need out.</b></h1>
+    <p class="lead">在浏览器里转换 .xrdml / .xy / .asc / .dat / .hdf5，并可在 Cu、Co、Mo 等靶材之间换算波长。<b>文件不会上传到任何服务器，每个数据点逐点无损。</b></p>
+
+    <section class="card grid">
+      <div class="pane">
+        <div>
+          <span class="label">1 · Files 文件 <em>.hdf5 · .xrdml · .xy · .asc · .dat</em></span>
+          <label class="drop" id="drop">
+            <input id="fileInput" type="file" multiple accept=".hdf5,.h5,.xrdml,.xy,.xye,.dat,.asc" hidden />
+            <strong>Drop files here or tap to choose</strong>
+            <span>把文件拖到这里，或点击选择（可多选）</span>
+          </label>
+          <ul class="files" id="fileList"></ul>
+        </div>
+        <div>
+          <span class="label">2 · Output formats 输出格式 <em>pick one or more</em></span>
+          <div class="chips" id="formats">
+            <label class="chip"><input type="checkbox" value="xrdml" checked /><span>.xrdml</span></label>
+            <label class="chip"><input type="checkbox" value="asc" checked /><span>.asc</span></label>
+            <label class="chip"><input type="checkbox" value="xy" /><span>.xy</span></label>
+            <label class="chip"><input type="checkbox" value="dat" /><span>.dat</span></label>
+          </div>
+        </div>
+        <div>
+          <span class="label">3 · Wavelength 波长 <em>re-map 2θ by Bragg's law</em></span>
+          <div class="row">
+            <select id="srcAnode" title="Anode the data was measured with">
+              <option value="auto">Measured with: read from file</option>
+              <option value="Cu">Measured with Cu Kα1 · 1.5406 Å</option>
+              <option value="Co">Measured with Co Kα1 · 1.7890 Å</option>
+              <option value="Mo">Measured with Mo Kα1 · 0.7093 Å</option>
+              <option value="Cr">Measured with Cr Kα1 · 2.2898 Å</option>
+              <option value="Fe">Measured with Fe Kα1 · 1.9360 Å</option>
+              <option value="Ag">Measured with Ag Kα1 · 0.5594 Å</option>
+            </select>
+            <span class="arrow">→</span>
+            <select id="tgtAnode" title="Convert to this anode">
+              <option value="">Keep original 不换算</option>
+              <option value="Cu">Cu Kα1 · 1.5406 Å</option>
+              <option value="Co">Co Kα1 · 1.7890 Å</option>
+              <option value="Mo">Mo Kα1 · 0.7093 Å</option>
+              <option value="Cr">Cr Kα1 · 2.2898 Å</option>
+              <option value="Fe">Fe Kα1 · 1.9360 Å</option>
+              <option value="Ag">Ag Kα1 · 0.5594 Å</option>
+            </select>
+          </div>
+          <div class="hint">换算时 2θ 按布拉格定律（d 值不变）重新计算，强度原样保留；超过 180° 的点物理上不存在，会被去掉并在结果里注明。</div>
+        </div>
+      </div>
+      <aside class="run">
+        <div class="k">Convert 转换</div>
+        <button class="go" id="goBtn" disabled>Convert all 全部转换</button>
+        <div class="status" id="status">Loading Python engine… 正在加载（首次约 15 MB）</div>
+        <div class="safe"><b>Lossless 逐点无损：</b>no rounding, interpolation, smoothing or correction. <b>Private 隐私：</b>everything runs on this device; nothing is uploaded.</div>
+      </aside>
+    </section>
+
+    <div id="resultsWrap" hidden>
+      <h2>Results 结果</h2>
+      <section class="card">
+        <div class="results-head">
+          <span id="summary" class="note"></span>
+          <button class="btn blue" id="zipBtn">Download all (.zip) 打包下载</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Input 输入</th><th>Points 点数</th><th>Downloads 下载</th><th>Notes 说明</th></tr></thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div id="previewWrap" hidden>
+      <h2>Preview 预览 <span class="note" id="previewName" style="font-weight:400;"></span></h2>
+      <section class="card" style="padding: 14px 16px;"><canvas id="plot"></canvas></section>
+    </div>
+  </main>
+
+  <footer>
+    <div>
+      XRD Data Bridge · MIT License · © 2026 Jie<br />
+      Uses the same open-source converter as the desktop bridge. Not affiliated with Anton Paar, Malvern Panalytical, Bruker or ICDD; trademarks belong to their owners.
+    </div>
+    <div class="qr"><div id="qr"></div>Scan to open 扫码打开</div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const files = new Map(); // name -> File
+    let py = null;
+    let h5Loaded = false;
+
+    function setStatus(t) { $("status").textContent = t; }
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+    // ---------- QR code of this page ----------
+    try {
+      const qr = qrcode(0, "M");
+      qr.addData(location.href.split("#")[0]);
+      qr.make();
+      $("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    } catch (e) { $("qr").textContent = location.href; }
+
+    // ---------- file selection ----------
+    function renderFiles() {
+      $("fileList").innerHTML = [...files.keys()].map(n => {
+        const ext = n.split(".").pop().toUpperCase();
+        return `<li><span class="ext">${esc(ext)}</span><span class="nm" title="${esc(n)}">${esc(n)}</span><button data-n="${esc(n)}" aria-label="Remove">×</button></li>`;
+      }).join("");
+      $("goBtn").disabled = !py || files.size === 0;
+    }
+    function addFiles(list) {
+      for (const f of list) files.set(f.name, f);
+      renderFiles();
+    }
+    $("fileInput").addEventListener("change", e => { addFiles(e.target.files); e.target.value = ""; });
+    $("fileList").addEventListener("click", e => {
+      const n = e.target.dataset && e.target.dataset.n;
+      if (n) { files.delete(n); renderFiles(); }
+    });
+    const drop = $("drop");
+    ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+    ["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+    drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+    // ---------- Python engine ----------
+    async function boot() {
+      try {
+        py = await loadPyodide();
+        await py.loadPackage(["numpy"]);
+        py.FS.mkdirTree("/work/in");
+        for (const mod of ["converter.py", "bridge_web.py"]) {
+          const src = await (await fetch(mod, { cache: "no-cache" })).text();
+          py.FS.writeFile(`/work/${mod}`, src);
+        }
+        py.runPython("import sys; sys.path.insert(0, '/work'); import bridge_web");
+        setStatus("Ready 就绪 — choose files and press Convert.");
+        renderFiles();
+      } catch (e) {
+        setStatus("Could not load the engine (check the internet connection): " + e.message);
+      }
+    }
+    boot();
+
+    // ---------- convert ----------
+    let lastOutputs = [];
+    $("goBtn").addEventListener("click", async () => {
+      const formats = [...document.querySelectorAll("#formats input:checked")].map(c => c.value);
+      if (!formats.length) { setStatus("Pick at least one output format 请至少选一种格式"); return; }
+      $("goBtn").disabled = true;
+      try {
+        const names = [...files.keys()];
+        if (!h5Loaded && names.some(n => /\.(hdf5|h5)$/i.test(n))) {
+          setStatus("Loading HDF5 support… 正在加载 HDF5 支持");
+          await py.loadPackage(["h5py"]);
+          h5Loaded = true;
+        }
+        setStatus("Converting… 正在转换");
+        py.runPython("bridge_web.reset_dirs()");
+        for (const [n, f] of files) {
+          py.FS.writeFile(`/work/in/${n}`, new Uint8Array(await f.arrayBuffer()));
+        }
+        const fn = py.globals.get("bridge_web").convert;
+        const report = JSON.parse(fn(JSON.stringify(names), JSON.stringify(formats), $("srcAnode").value, $("tgtAnode").value, "panalytical_2col"));
+        showResults(report);
+        if (names.length) showPreview(names[0]);
+        setStatus("Done 完成");
+      } catch (e) {
+        setStatus("Error: " + e.message);
+      } finally {
+        $("goBtn").disabled = files.size === 0;
+      }
+    });
+
+    function blobUrl(name) {
+      const data = py.FS.readFile(`/work/out/${name}`);
+      return URL.createObjectURL(new Blob([data], { type: "application/octet-stream" }));
+    }
+
+    function showResults(report) {
+      lastOutputs = [];
+      let nOut = 0, nErr = 0;
+      $("resultBody").innerHTML = report.map(r => {
+        if (r.error) { nErr++; return `<tr><td><b>${esc(r.file)}</b></td><td>—</td><td class="bad">Could not read 无法读取</td><td class="note">${esc(r.error)}</td></tr>`; }
+        const links = r.outputs.map(o => { lastOutputs.push(o); nOut++; return `<a href="${blobUrl(o)}" download="${esc(o)}">${esc(o)}</a>`; }).join("");
+        const pts = r.scans.map(s => s.points_in === s.points_out ? `<span class="ok">${s.points_in} = ${s.points_out}</span>`
+          : `${s.points_in} → ${s.points_out}`).join("<br/>");
+        const notes = [];
+        r.scans.forEach(s => {
+          if (s.anode_in !== s.anode_out) notes.push(`${s.anode_in} → ${s.anode_out} (Bragg)` + (s.dropped ? `, ${s.dropped} point(s) beyond 180° removed` : ""));
+        });
+        r.skipped.forEach(s => notes.push(`skipped .${esc(s.format)}: ${esc(s.reason)}`));
+        return `<tr><td><b>${esc(r.file)}</b></td><td>${pts}</td><td>${links || "—"}</td><td class="note">${notes.join("<br/>") || "every point identical 逐点一致"}</td></tr>`;
+      }).join("");
+      $("summary").textContent = `${nOut} file(s) ready · ${nErr} error(s)`;
+      $("zipBtn").disabled = nOut === 0;
+      $("resultsWrap").hidden = false;
+    }
+
+    $("zipBtn").addEventListener("click", () => {
+      const fn = py.globals.get("bridge_web").zip_outputs;
+      const bytes = fn().toJs();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+      a.download = "xrd_converted.zip";
+      a.click();
+    });
+
+    // ---------- preview plot (display only, downsampled) ----------
+    function showPreview(name) {
+      try {
+        const d = JSON.parse(py.globals.get("bridge_web").preview(name));
+        $("previewName").textContent = `${d.name} · ${d.anode} · ${d.points} pts`;
+        $("previewWrap").hidden = false;
+        const c = $("plot"), r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+        c.width = r.width * dpr; c.height = 220 * dpr;
+        const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const W = r.width, H = 220, pl = 52, pr = 10, pt = 10, pb = 26;
+        const xs = d.x, ys = d.y, x0 = xs[0], x1 = xs[xs.length - 1];
+        const y0 = Math.min(...ys), y1 = Math.max(...ys) * 1.05 || 1;
+        const X = v => pl + (v - x0) / (x1 - x0 || 1) * (W - pl - pr);
+        const Y = v => pt + (1 - (v - y0) / (y1 - y0 || 1)) * (H - pt - pb);
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = "#e9edf4"; ctx.fillStyle = "#4c5873"; ctx.font = '12px "DengXian", sans-serif';
+        for (let i = 0; i <= 4; i++) { const yy = pt + i * (H - pt - pb) / 4; ctx.beginPath(); ctx.moveTo(pl, yy); ctx.lineTo(W - pr, yy); ctx.stroke(); ctx.textAlign = "right"; ctx.fillText(Math.round(y1 - i * (y1 - y0) / 4), pl - 6, yy + 4); }
+        ctx.textAlign = "center";
+        for (let t = Math.ceil(x0 / 10) * 10; t <= x1; t += 10) ctx.fillText(t + "°", X(t), H - 8);
+        ctx.strokeStyle = "#2456e8"; ctx.lineWidth = 1.4; ctx.beginPath();
+        xs.forEach((v, i) => i ? ctx.lineTo(X(v), Y(ys[i])) : ctx.moveTo(X(v), Y(ys[i]))); ctx.stroke();
+      } catch (e) { $("previewWrap").hidden = true; }
+    }
+  </script>
+</body>
+</html>

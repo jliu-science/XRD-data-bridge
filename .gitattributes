@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.hdf5 binary
+*.h5 binary
+*.png binary

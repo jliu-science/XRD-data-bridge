@@ -1,0 +1,16 @@
+{
+  "input_dir": "",
+  "output_mode": "custom_dir",
+  "custom_output_dir": "",
+  "include_subfolders": true,
+  "anode": "Cu",
+  "asc_flavor": "panalytical_2col",
+  "angle_dataset_override": "",
+  "intensity_dataset_override": "",
+  "highscore_exe": "",
+  "auto_launch_highscore": false,
+  "watch_enabled": false,
+  "poll_interval_sec": 2.0,
+  "output_formats": ["xrdml", "asc"],
+  "target_anode": ""
+}
