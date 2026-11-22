@@ -359,9 +359,6 @@
     .convert-run .meter-lg span { background: #ff922b; }
     .convert-run .rule { background: rgba(255, 255, 255, 0.18); }
     .convert-run .run-note { color: #e8efff; }
-    .run-btn.btn.dark { background: #f76707; border-color: #f76707; color: #fff; font-weight: 700; box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.45); }
-    .run-btn.btn.dark:hover { background: #e8590c; border-color: #e8590c; }
-    .run-btn.btn.dark .sub { color: #fff1e3; }
     .convert-run .watch { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.35); color: #ffffff; font-weight: 700; }
     .convert-run .watch .dot { background: rgba(255, 255, 255, 0.55); }
     .convert-run .watch.on { background: #ffffff; border-color: #ffffff; color: var(--ok); }
@@ -452,13 +449,16 @@
     pre { font-size: 13.5px; }
     .toast { font-size: 15px; }
 
-    /* Conversion card: compact, navy run panel with amber action */
+    /* Conversion card: compact, navy run panel with white action */
     .convert-form { padding: 24px 28px 22px; gap: 20px; }
     .convert-opts { padding-top: 18px; }
     .convert-run { background: linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%); padding: 24px 26px; gap: 14px; }
     .convert-run .meter-lg span { background: var(--gold); }
-    .run-btn.btn.dark { background: linear-gradient(180deg, #ffb52e 0%, #f59f00 100%); border-color: #f59f00; color: var(--navy); font-size: 17px; padding: 14px 18px; box-shadow: 0 10px 24px -10px rgba(245, 159, 0, 0.8); }
-    .run-btn.btn.dark:hover { background: linear-gradient(180deg, #ffc24d 0%, #ffab12 100%); border-color: #ffab12; }
+    .run-btn.btn.dark {
+      background: #fff; border-color: #d5e0fa; color: var(--navy); font-size: 17px; font-weight: 700;
+      padding: 14px 18px; box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+    }
+    .run-btn.btn.dark:hover { background: #e8efff; border-color: #c4d3f5; }
     .run-btn.btn.dark .sub { color: inherit; font-size: 13px; }
     .convert-run .watch.on { color: #075740; }
     .convert-run .watch:disabled { color: #e8efff; cursor: default; }
