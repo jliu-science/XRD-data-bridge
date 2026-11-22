@@ -354,11 +354,11 @@
 
     /* ---- contrast pass: royal-blue conversion panel ---- */
     .convert-run { background: linear-gradient(160deg, #1e40af 0%, #1d4ed8 60%, #2563eb 100%); border-left: 0; color: #e6edff; }
-    .convert-run .run-row { color: #dbe5ff; font-weight: 700; }
+    .convert-run .run-row { color: #f4f7ff; font-weight: 700; }
     .convert-run .meter-lg { background: rgba(255, 255, 255, 0.22); }
     .convert-run .meter-lg span { background: #ff922b; }
     .convert-run .rule { background: rgba(255, 255, 255, 0.18); }
-    .convert-run .run-note { color: #c7d5ff; }
+    .convert-run .run-note { color: #e8efff; }
     .run-btn.btn.dark { background: #f76707; border-color: #f76707; color: #fff; font-weight: 700; box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.45); }
     .run-btn.btn.dark:hover { background: #e8590c; border-color: #e8590c; }
     .run-btn.btn.dark .sub { color: #fff1e3; }
@@ -459,8 +459,10 @@
     .convert-run .meter-lg span { background: var(--gold); }
     .run-btn.btn.dark { background: linear-gradient(180deg, #ffb52e 0%, #f59f00 100%); border-color: #f59f00; color: var(--navy); font-size: 17px; padding: 14px 18px; box-shadow: 0 10px 24px -10px rgba(245, 159, 0, 0.8); }
     .run-btn.btn.dark:hover { background: linear-gradient(180deg, #ffc24d 0%, #ffab12 100%); border-color: #ffab12; }
-    .run-btn.btn.dark .sub { color: rgba(15, 31, 69, 0.7); font-size: 13px; }
-    .convert-run .watch.on { color: var(--ok); }
+    .run-btn.btn.dark .sub { color: inherit; font-size: 13px; }
+    .convert-run .watch.on { color: #075740; }
+    .convert-run .watch:disabled { color: #e8efff; cursor: default; }
+    .convert-run .watch:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
     .flow-arrow svg { stroke: var(--gold); }
 
     /* Section accent + stats */
