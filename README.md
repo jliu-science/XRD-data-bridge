@@ -4,10 +4,6 @@
 
 [**Online converter →**](https://jliu-science.github.io/XRD-data-bridge/)
 
-| Desktop bridge (lab PC) | Online converter |
-| --- | --- |
-| ![Desktop bridge](docs/images/desktop-app.png) | ![Online converter](docs/images/online-converter.png) |
-
 ---
 
 ## What it does
