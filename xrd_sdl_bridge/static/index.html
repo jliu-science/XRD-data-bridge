@@ -510,6 +510,84 @@
     .run-btn.btn { flex-direction: column; gap: 2px; line-height: 1.2; white-space: normal; }
     .run-btn .sub { display: block; font-weight: 700; }
     .stale-banner { background: #fff4e0; border: 1.5px solid #f59f00; color: #7a3d00; border-radius: 6px; padding: 12px 16px; font-size: 14.5px; font-weight: 700; line-height: 1.6; }
+    /* ================= Theme: same visual language as Crystallography Simulators / PXRD Optics =================
+       white nav, dark teal header band, headings with an orange rule, white cards on cool grey */
+    :root {
+      --paper: #eef3f5; --paper-2: #e4ecef; --card: #ffffff;
+      --line: #d5e0e4; --line-soft: #e6eef1; --line-strong: #b9cbd0;
+      --ink: #0f2730; --ink-2: #2a3d44; --muted: #4a5f66; --faint: #8aa0a6;
+      --sapphire: #075e66; --sapphire-2: #138592; --sapphire-soft: #eef6f5;
+      --gold: #d9692f; --gold-ink: #a8501c; --gold-soft: #fbeee6;
+      --navy: #0f2f3a; --navy-2: #16505a;
+      --r: 8px; --r-lg: 14px;
+    }
+    html, body { background: var(--paper); }
+    body { color: var(--ink-2); }
+    /* nav */
+    .topnav { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); box-shadow: none; }
+    .topnav-inner { height: 58px; }
+    .brand { color: var(--ink); gap: 9px; }
+    .brand-mark { width: 10px; height: 10px; border: 0; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px #df794026; }
+    .brand-mark svg { display: none; }
+    .brand-name { font-size: 16px; color: var(--ink); }
+    .brand-name small { display: none; }
+    .navlinks a { color: #33484f; font-size: 14px; font-weight: 600; }
+    .navlinks a:hover { color: var(--sapphire); }
+    .navlinks a.active { color: var(--sapphire); border-bottom: 3px solid var(--gold); }
+    .nav-actions .btn.text { color: var(--ink); font-size: 13.5px; font-weight: 600; border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 12px; }
+    .nav-actions .btn.text:hover { color: var(--sapphire); border-color: var(--sapphire-2); background: #fff; }
+    /* header band (full width) */
+    body { overflow-x: clip; }
+    .hero { position: relative; isolation: isolate; background: none; border-bottom: 0; color: #fff; padding: 26px 0 24px; margin-bottom: 8px; }
+    .hero::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw); background: linear-gradient(120deg, var(--navy) 0%, var(--navy-2) 100%); }
+    .eyebrow { color: #8fd3db; letter-spacing: 0.01em; text-transform: none; font-size: 14.5px; font-weight: 600; }
+    .hero h1, .hero h1 b { color: #fff; }
+    .hero h1 { font-weight: 700; }
+    .hero h1 b { color: #f3c969; }
+    .stat { border-left-color: rgba(255, 255, 255, 0.18); }
+    .stat .k { color: #b7d3d9; }
+    .stat .v, .stat:nth-child(2) .v { color: #fff; }
+    .stat:nth-child(3) .v { color: #f3c969; }
+    .stat .v small { color: #f3c969; }
+    .stat .meter { background: rgba(255, 255, 255, 0.2); }
+    .stat .meter span { background: #8fd3db; }
+    /* section headings with the orange rule */
+    .section-head { margin: 34px 0 14px; }
+    .section-head h2 { color: var(--ink); display: block; }
+    .section-head h2:not(.minor)::before { display: none; }
+    .section-head h2::after { content: ""; display: block; width: 44px; height: 3px; margin-top: 10px; border-radius: 3px; background: var(--gold); }
+    .section-head h2 .hint { margin-left: 10px; }
+    /* cards */
+    .card { border-radius: var(--r-lg); border: 1px solid var(--line); box-shadow: 0 1px 2px #0f27300d; }
+    .card:hover { box-shadow: 0 6px 18px #0f273014; }
+    .convert-run { background: linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); border-radius: 0 var(--r-lg) var(--r-lg) 0; }
+    .run-k { color: #8fd3db; }
+    .convert-run .meter-lg span { background: #8fd3db; }
+    .run-btn.btn.dark { background: var(--gold); border-color: var(--gold); text-shadow: none; box-shadow: 0 10px 24px -12px rgba(217, 105, 47, 0.9); border-radius: 10px; }
+    .run-btn.btn.dark:hover { background: #c55d26; border-color: #c55d26; }
+    .btn { border-radius: 8px; }
+    .btn.dark { background: var(--sapphire); border-color: var(--sapphire); box-shadow: none; }
+    .btn.dark:hover { background: var(--sapphire-2); border-color: var(--sapphire-2); }
+    .btn:hover { border-color: var(--sapphire-2); }
+    .eyebrow, .label .step { color: var(--gold-ink); }
+    .hero .eyebrow { color: #8fd3db; }
+    .label em, .label em * { color: var(--gold-ink); }
+    .chip span { border-color: var(--line-strong); }
+    .chip:hover span { border-color: var(--sapphire-2); color: var(--sapphire); }
+    .chip input:checked + span { background: var(--sapphire); border-color: var(--sapphire); box-shadow: 0 4px 10px -6px rgba(7, 94, 102, 0.7); }
+    .flow-arrow svg { stroke: var(--gold); }
+    .ftype { background: var(--sapphire); border-color: var(--sapphire); }
+    .ftype.h5 { background: var(--navy); border-color: var(--navy); color: #f3c969; }
+    .lib-row.active { background: var(--sapphire-soft); }
+    .lib-row.active::before { background: var(--sapphire); }
+    .tab-btn.active { color: var(--sapphire); border-bottom-color: var(--gold); }
+    .qc { background: #f7fafb; }
+    .select, .field-input, .modal-input, .input-group { border-radius: 8px; }
+    /* footer band */
+    footer { position: relative; isolation: isolate; color: #b9cbd0; padding: 28px 0 34px; margin-top: 40px; border-top: 0; }
+    footer::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: -40px; left: calc(50% - 50vw); right: calc(50% - 50vw); background: #17323a; }
+    footer span:first-child { color: #fff; font-weight: 700; }
+    @media (max-width: 700px) { section.card { overflow-x: auto; } .tab-pane { min-width: 0; } }
   </style>
 </head>
 <body>
