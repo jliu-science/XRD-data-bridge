@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,7 +30,7 @@ def build() -> Path:
     html = (bridge / "static" / "index.html").read_text(encoding="utf-8")
     html = html.replace(
         '  <meta name="bridge-token" content="__BRIDGE_TOKEN__" />',
-        '  <script src="browser.js"></script>',
+        f'  <script src="browser.js?v={int(time.time())}"></script>',  # new URL per build: no stale cache
     )
     (SITE / "index.html").write_text(html, encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")

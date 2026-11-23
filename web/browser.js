@@ -22,7 +22,7 @@ window.browserBridge = (() => {
     await Promise.all([
       py.loadPackage(["numpy", "h5py"]),
       ...modules.map(async name => {
-        const response = await fetch(name);
+        const response = await fetch(name, { cache: "no-cache" });  // always load the current converter after an update
         if (!response.ok) throw new Error(`Could not load ${name} (HTTP ${response.status}).`);
         py.FS.writeFile(name, await response.text());
       }),
