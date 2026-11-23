@@ -444,6 +444,46 @@ def _find_1d_pair_in_group(group: Any) -> tuple[np.ndarray, np.ndarray] | None:
     return None
 
 
+def _pick_hdf5_patterns(h5f: Any, discovered: list[tuple[str, np.ndarray, np.ndarray, dict[str, Any]]]) -> list:
+    """Keep one pattern per measurement in NeXus-style files (e.g. Anton Paar XRDynamic).
+
+    Such files hold the same scan twice: /entry/data (NXdata, the pattern meant for plotting) and
+    /entry/instrument/detector (NXdetector).  Exact duplicates are dropped, and when an NXdata
+    group exists the detector copies are not exported separately.  Dropped groups are listed in
+    the kept scan's metadata (HDF5SkippedGroups); the kept pattern's points are never changed."""
+    if len(discovered) < 2:
+        return discovered
+
+    def nx_class(path: str) -> str:
+        try:
+            return str(_decode_attr(h5f[path].attrs.get("NX_class", ""))).strip()
+        except (KeyError, TypeError):
+            return ""
+
+    def is_plot(path: str) -> bool:
+        cls = nx_class(path)
+        return cls == "NXdata" or (not cls and path.rstrip("/").rsplit("/", 1)[-1].lower() == "data")
+
+    def is_detector(path: str) -> bool:
+        return nx_class(path) == "NXdetector" or "instrument/detector" in path.lower()
+
+    kept: list = []
+    skipped: list[str] = []
+    for item in discovered:
+        if any(np.array_equal(item[1], k[1]) and np.array_equal(item[2], k[2]) for k in kept):
+            skipped.append(f"{item[0]} (identical copy)")
+            continue
+        kept.append(item)
+    if any(is_plot(k[0]) for k in kept):
+        for item in [k for k in kept if is_detector(k[0]) and not is_plot(k[0])]:
+            kept.remove(item)
+            skipped.append(f"{item[0]} (detector copy; NXdata pattern exported instead)")
+    if skipped and kept:
+        for i, (grp_path, ang, inten, attrs) in enumerate(kept):
+            kept[i] = (grp_path, ang, inten, {**attrs, "HDF5Group": grp_path, "HDF5SkippedGroups": "; ".join(skipped)})
+    return kept
+
+
 def read_hdf5_file(
     filepath: str | Path,
     angle_dataset: str | None = None,
@@ -498,6 +538,7 @@ def read_hdf5_file(
                 "Inspect its HDF5 tree in the UI and specify dataset paths if needed."
             )
 
+        discovered = _pick_hdf5_patterns(h5f, discovered)
         scans: list[ScanData] = []
         multi = len(discovered) > 1
         for idx, (grp_path, ang, inten, attrs) in enumerate(discovered, start=1):

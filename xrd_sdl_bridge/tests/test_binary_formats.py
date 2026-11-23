@@ -124,6 +124,46 @@ class TestBinaryReaders(unittest.TestCase):
         self.assertEqual(src.read_bytes(), original)
 
 
+class TestNexusHdf5(unittest.TestCase):
+    """Anton Paar style NeXus files hold the pattern in /entry/data and /entry/instrument/detector."""
+
+    def _write(self, path: Path, detector_counts: np.ndarray) -> np.ndarray:
+        import h5py
+
+        tt = 4.0 + np.arange(200) * 0.01
+        counts = np.arange(200, dtype=np.float64) * 3 + 7
+        with h5py.File(path, "w") as f:
+            entry = f.create_group("entry")
+            entry.attrs["NX_class"] = "NXentry"
+            data = entry.create_group("data")
+            data.attrs["NX_class"] = "NXdata"
+            data["two_theta"] = tt
+            data["counts"] = counts
+            det = entry.create_group("instrument").create_group("detector")
+            det.attrs["NX_class"] = "NXdetector"
+            det["two_theta"] = tt
+            det["counts"] = detector_counts
+        return counts
+
+    def test_one_scan_per_file_named_after_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "KDP 4-60.hdf5"
+            counts = self._write(p, np.arange(200, dtype=np.float64) * 3 + 7)
+            scans = read_scan_file(p)
+            self.assertEqual(len(scans), 1)
+            self.assertEqual(scans[0].name, "KDP 4-60")
+            np.testing.assert_array_equal(scans[0].intensity, counts)
+
+    def test_nxdata_wins_when_detector_copy_differs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "s.hdf5"
+            counts = self._write(p, np.ones(200))
+            scans = read_scan_file(p)
+            self.assertEqual(len(scans), 1)
+            np.testing.assert_array_equal(scans[0].intensity, counts)
+            self.assertIn("instrument/detector", scans[0].metadata["HDF5SkippedGroups"])
+
+
 @unittest.skipUnless(SAMPLES.is_dir(), "vendor sample files not present")
 class TestVendorSamples(unittest.TestCase):
     def _pair(self, src: str, ref: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
