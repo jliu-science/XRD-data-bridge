@@ -21,6 +21,7 @@ from converter import (
     normalize_anode,
     read_scan_file,
     write_asc_file,
+    write_bruker_raw_file,
     write_xrdml_file,
     write_xy_file,
 )
@@ -41,7 +42,7 @@ SUPPORTED_INPUT_EXTS = set(INPUT_EXTENSIONS)
 # Lower number = more "raw". When several files share a stem in one folder, the most raw wins.
 # Lower = closer to the instrument's own counts (Bruker .raw holds exact float32 counts).
 SOURCE_PRIORITY = {".hdf5": 0, ".h5": 0, ".raw": 0, ".xrdml": 1, ".xy": 2, ".xye": 2, ".dat": 3, ".asc": 4}
-_MARKER_EXTS = {".xrdml", ".xy", ".xye", ".dat"}
+_MARKER_EXTS = {".xrdml", ".xy", ".xye", ".dat", ".raw"}
 _GENERATED_KEY = "__generated__"
 
 
@@ -434,6 +435,8 @@ class FolderBridgeManager:
                 try:
                     if fmt == "xrdml":
                         write_xrdml_file(out_scan, path, anode_override=out_anode)
+                    elif fmt == "raw":
+                        write_bruker_raw_file(out_scan, path, anode_override=out_anode)
                     elif fmt == "asc":
                         write_asc_file(out_scan, path, asc_flavor=cfg.asc_flavor, anode_override=out_anode)
                     else:

@@ -1,4 +1,4 @@
-"""Tests for the read-only Bruker .raw (RAW1.01) reader."""
+"""Tests for the Bruker .raw (RAW1.01) reader and writer."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ BRIDGE_ROOT = Path(__file__).resolve().parents[1]
 if str(BRIDGE_ROOT) not in sys.path:
     sys.path.insert(0, str(BRIDGE_ROOT))
 
-from converter import read_scan_file, write_xy_file  # noqa: E402
+from converter import is_bridge_generated, read_scan_file, write_bruker_raw_file, write_xy_file  # noqa: E402
 
 # Optional vendor samples with matching vendor .xy exports (not part of the repository).
 SAMPLES = BRIDGE_ROOT.parent / "data testing"
@@ -88,6 +88,41 @@ class TestBinaryReaders(unittest.TestCase):
         with self.assertRaises(ValueError):
             read_scan_file(p)
 
+    def test_raw_writer_round_trip_is_exact(self) -> None:
+        src = self.tmp / "s.raw"
+        y = np.array([97, 84, 75, 0, 16777216, 1.25, 3], dtype=np.float64)
+        src.write_bytes(_make_raw([(2.0, 0.01, y)]))
+        scan = read_scan_file(src)[0]
+        out = write_bruker_raw_file(scan, self.tmp / "out" / "s.raw")
+        back = read_scan_file(out)[0]
+        np.testing.assert_array_equal(back.intensity, scan.intensity)
+        self.assertLessEqual(float(np.max(np.abs(back.two_theta - scan.two_theta))), 1e-9)
+        self.assertTrue(is_bridge_generated(out))
+        self.assertEqual(back.wavelength_ka1, scan.wavelength_ka1)
+
+    def test_raw_writer_refuses_lossy_data(self) -> None:
+        src = self.tmp / "s.raw"
+        src.write_bytes(_make_raw([(2.0, 0.01, np.arange(6, dtype=np.float64))]))
+        scan = read_scan_file(src)[0]
+        scan.intensity = scan.intensity + 0.1  # 0.1 is not exact in float32
+        with self.assertRaises(ValueError):
+            write_bruker_raw_file(scan, self.tmp / "a.raw")
+        scan = read_scan_file(src)[0]
+        scan.two_theta = scan.two_theta.copy()
+        scan.two_theta[3] += 0.001  # non-uniform grid
+        with self.assertRaises(ValueError):
+            write_bruker_raw_file(scan, self.tmp / "b.raw")
+        self.assertFalse((self.tmp / "a.raw").exists() or (self.tmp / "b.raw").exists())
+
+    def test_raw_writer_never_overwrites_instrument_file(self) -> None:
+        src = self.tmp / "s.raw"
+        original = _make_raw([(2.0, 0.01, np.arange(6, dtype=np.float64))])
+        src.write_bytes(original)
+        scan = read_scan_file(src)[0]
+        with self.assertRaises(ValueError):
+            write_bruker_raw_file(scan, src)
+        self.assertEqual(src.read_bytes(), original)
+
 
 @unittest.skipUnless(SAMPLES.is_dir(), "vendor sample files not present")
 class TestVendorSamples(unittest.TestCase):
@@ -103,6 +138,15 @@ class TestVendorSamples(unittest.TestCase):
         x, y, r = self._pair("AP1.raw", "AP1.xy")
         np.testing.assert_array_equal(np.round(x, 5), r[:, 0])
         np.testing.assert_array_equal(y, r[:, 1])
+
+    def test_bruker_raw_rewrite_keeps_identical_data_block(self) -> None:
+        src = SAMPLES / "AP1.raw"
+        if not src.is_file():
+            self.skipTest("AP1.raw not present")
+        with tempfile.TemporaryDirectory() as tmp:
+            out = write_bruker_raw_file(read_scan_file(src)[0], Path(tmp) / "AP1_copy.raw")
+            n = struct.unpack_from("<I", src.read_bytes(), 716)[0]
+            self.assertEqual(out.read_bytes()[-4 * n :], src.read_bytes()[-4 * n :])
 
 
 if __name__ == "__main__":

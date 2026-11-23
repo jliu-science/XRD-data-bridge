@@ -2,7 +2,7 @@
 
 Reads  : .hdf5 / .h5 (Anton Paar), .xrdml (PANalytical), .xy / .xye, .dat, .asc
          (PANalytical 2-column or Rigaku *TYPE_RAW) and .raw (Bruker RAW1.01).
-Writes : .xrdml, .asc, .xy, .dat  (+ optional anode wavelength re-mapping via Bragg's law).
+Writes : .xrdml, .asc, .xy, .dat, .raw (Bruker RAW1.01)  (+ optional anode wavelength re-mapping via Bragg's law).
 
 All read operations open source files strictly in read-only mode.  Write operations
 never touch .hdf5/.h5 files and refuse to overwrite an existing .xy/.xye/.xrdml/.dat
@@ -24,15 +24,15 @@ from xml.sax.saxutils import escape
 import numpy as np
 
 # Binary raw extensions that must never be written at all.
-PROTECTED_EXTENSIONS = {".hdf5", ".h5", ".raw"}
-# Text formats that may be raw instrument files: only overwrite if the bridge made them.
-GUARDED_TEXT_EXTENSIONS = {".xy", ".xye", ".xrdml", ".dat"}
-# Marker string embedded in every .xrdml / .xy / .dat this bridge writes.
+PROTECTED_EXTENSIONS = {".hdf5", ".h5"}
+# Formats that may be raw instrument files: only overwrite if the bridge made them.
+GUARDED_TEXT_EXTENSIONS = {".xy", ".xye", ".xrdml", ".dat", ".raw"}
+# Marker string embedded in every .xrdml / .xy / .dat / .raw this bridge writes.
 BRIDGE_MARKER = "SDL Bridge"
 
 INPUT_EXTENSIONS = {".hdf5", ".h5", ".xrdml", ".xy", ".xye", ".dat", ".asc", ".raw"}
-OUTPUT_FORMATS = ("xrdml", "asc", "xy", "dat")
-FORMAT_EXTENSION = {"xrdml": ".xrdml", "asc": ".asc", "xy": ".xy", "dat": ".dat"}
+OUTPUT_FORMATS = ("xrdml", "asc", "xy", "dat", "raw")
+FORMAT_EXTENSION = {"xrdml": ".xrdml", "asc": ".asc", "xy": ".xy", "dat": ".dat", "raw": ".raw"}
 
 # Standard X-ray tube characteristic wavelengths in Angstroms (ICDD / PANalytical conventions).
 ANODE_WAVELENGTHS: dict[str, dict[str, float]] = {
@@ -856,6 +856,67 @@ def write_xy_file(scan: ScanData, out_path: str | Path, anode_override: str | No
     lines.append("# Columns: 2Theta(deg) Intensity(counts)")
     lines.extend(f"{fmt_num(x)} {fmt_num(y)}" for x, y in zip(scan.two_theta, scan.intensity))
     target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return target
+
+
+def write_bruker_raw_file(scan: ScanData, out_path: str | Path, anode_override: str | None = None) -> Path:
+    """Export ScanData to a Bruker DIFFRAC .raw file, version 3 ('RAW1.01'), one range.
+
+    Same layout read_bruker_raw_file() reads.  RAW stores intensities as float32 and the angles
+    only as start + step, so the file is written only if both hold the data exactly: every
+    intensity must be representable as float32 (all integer counts up to 16,777,216 are) and the
+    2Theta grid must be uniform (is_exactly_uniform).  Otherwise ValueError is raised and nothing
+    is written.
+    """
+    target = Path(out_path)
+    _guard_output_path(target)
+    tt = np.asarray(scan.two_theta, dtype=np.float64)
+    y = np.asarray(scan.intensity, dtype=np.float64)
+    if tt.size < 2 or tt.size != y.size:
+        raise ValueError(f"{scan.name}: need at least two points to write Bruker .raw")
+    if not is_exactly_uniform(tt):
+        raise ValueError(
+            "Bruker .raw stores only start and step; this scan's 2Theta grid is not uniform, "
+            "so writing it would move data points."
+        )
+    y32 = y.astype("<f4")
+    if not np.array_equal(y32.astype(np.float64), y):
+        raise ValueError(
+            "Bruker .raw stores intensities as 32-bit floats; some intensities in this scan would "
+            "be rounded, so .raw was not written."
+        )
+    anode, wl = scan.resolved_wavelengths(anode_override)
+    start = float(tt[0])
+    step = (float(tt[-1]) - start) / (tt.size - 1)
+    now = dt.datetime.now()
+
+    def put_str(buf: bytearray, offset: int, length: int, text: str) -> None:
+        raw = text.encode("latin-1", "replace")[: length - 1]
+        buf[offset : offset + len(raw)] = raw
+
+    head = bytearray(712)
+    head[0:8] = b"RAW1.01\0"
+    struct.pack_into("<II", head, 8, 1, 1)  # status: completed; one range
+    put_str(head, 16, 10, now.strftime("%m/%d/%y"))
+    put_str(head, 26, 10, now.strftime("%H:%M:%S"))
+    put_str(head, 326, 60, scan.name)
+    put_str(head, 386, 160, f"Converted by XRD Data Bridge ({BRIDGE_MARKER}) from {Path(scan.source_path).name}")
+    put_str(head, 608, 4, anode)
+    ka1, ka2 = float(wl["kAlpha1"]), float(wl["kAlpha2"])
+    ratio = float(wl.get("ratio", 0.5))
+    ka_avg = (2 * ka1 + ka2) / 3 if ratio == 0.5 else (ka1 + ratio * ka2) / (1 + ratio)
+    struct.pack_into("<5d", head, 616, ka_avg, ka1, ka2, float(wl["kBeta"]), ratio)
+
+    rng = bytearray(304)
+    struct.pack_into("<II", rng, 0, 304, tt.size)
+    struct.pack_into("<2d", rng, 8, start / 2.0, start)
+    struct.pack_into("<d", rng, 176, step)
+    struct.pack_into("<f", rng, 192, float(scan.counting_time or 1.0))
+    struct.pack_into("<d", rng, 240, ka1)
+    struct.pack_into("<II", rng, 252, 4, 0)  # datum size, supplementary header size
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(bytes(head) + bytes(rng) + y32.tobytes())
     return target
 
 
