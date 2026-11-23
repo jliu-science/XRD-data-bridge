@@ -8,13 +8,13 @@
 
 ## What it does
 
-- **Reads**: `.hdf5` / `.h5` (e.g. Anton Paar XRDynamic), `.xrdml`, `.xy` / `.xye`, `.asc` (PANalytical 2-column and Rigaku), `.dat`
+- **Reads**: `.hdf5` / `.h5` (e.g. Anton Paar XRDynamic), `.xrdml`, Bruker `.raw` (RAW1.01), `.xy` / `.xye`, `.asc` (PANalytical 2-column and Rigaku), `.dat`
 - **Writes**: `.xrdml`, `.asc`, `.xy`, `.dat` — choose any combination
 - **Wavelength re-mapping**: Cu ↔ Co ↔ Mo ↔ Cr ↔ Fe ↔ Ag via Bragg's law (d-spacing preserved, intensities unchanged)
 - **Folder watching** (desktop): new scans are converted automatically, user sub-folders are mirrored
 - **Quality check and preview**, optional hand-off to HighScore Plus / ICDD Search & Match
 
-Coming next: Bruker `.raw` and PANalytical `.rd` (see [notes](xrd_sdl_bridge/docs/BINARY_FORMATS_NOTES.md)).
+Bruker `.raw` is a read-only input. PANalytical `.rd` is intentionally not supported: it stores each point as round(10·√counts), so it cannot reproduce the exact counts; use the `.xrdml` instead (see [notes](xrd_sdl_bridge/docs/BINARY_FORMATS_NOTES.md)).
 
 ## Data integrity
 

@@ -1,7 +1,7 @@
 """Non-destructive powder XRD format converter.
 
 Reads  : .hdf5 / .h5 (Anton Paar), .xrdml (PANalytical), .xy / .xye, .dat, .asc
-         (PANalytical 2-column or Rigaku *TYPE_RAW).
+         (PANalytical 2-column or Rigaku *TYPE_RAW) and .raw (Bruker RAW1.01).
 Writes : .xrdml, .asc, .xy, .dat  (+ optional anode wavelength re-mapping via Bragg's law).
 
 All read operations open source files strictly in read-only mode.  Write operations
@@ -14,6 +14,8 @@ from __future__ import annotations
 import datetime as dt
 import os
 import re
+import struct
+from decimal import Decimal
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -22,13 +24,13 @@ from xml.sax.saxutils import escape
 import numpy as np
 
 # Binary raw extensions that must never be written at all.
-PROTECTED_EXTENSIONS = {".hdf5", ".h5"}
+PROTECTED_EXTENSIONS = {".hdf5", ".h5", ".raw"}
 # Text formats that may be raw instrument files: only overwrite if the bridge made them.
 GUARDED_TEXT_EXTENSIONS = {".xy", ".xye", ".xrdml", ".dat"}
 # Marker string embedded in every .xrdml / .xy / .dat this bridge writes.
 BRIDGE_MARKER = "SDL Bridge"
 
-INPUT_EXTENSIONS = {".hdf5", ".h5", ".xrdml", ".xy", ".xye", ".dat", ".asc"}
+INPUT_EXTENSIONS = {".hdf5", ".h5", ".xrdml", ".xy", ".xye", ".dat", ".asc", ".raw"}
 OUTPUT_FORMATS = ("xrdml", "asc", "xy", "dat")
 FORMAT_EXTENSION = {"xrdml": ".xrdml", "asc": ".asc", "xy": ".xy", "dat": ".dat"}
 
@@ -673,6 +675,102 @@ def read_asc_file(filepath: str | Path, default_anode: str = "Cu") -> list[ScanD
     ]
 
 
+def _grid(start: float, step: float, count: int, offset: float = 0.0) -> np.ndarray:
+    """2Theta grid start + (i + offset) * step, computed in decimal arithmetic from the stored
+    float64 values so no binary rounding noise (2.0300000000000002) is added to the angles."""
+    d_start = Decimal(repr(float(start)))
+    d_step = Decimal(repr(float(step)))
+    d_off = Decimal(repr(float(offset)))
+    return np.array([float(d_start + (i + d_off) * d_step) for i in range(count)], dtype=np.float64)
+
+
+def _cstr(buf: bytes, offset: int, length: int) -> str:
+    return buf[offset : offset + length].split(b"\0", 1)[0].decode("latin-1").strip()
+
+
+def read_bruker_raw_file(filepath: str | Path, default_anode: str = "Cu") -> list[ScanData]:
+    """Read a Bruker DIFFRAC .raw file, version 3 ('RAW1.01'), read-only.  One ScanData per range.
+
+    Layout (little-endian): 712-byte file header (12 uint32 range count, 326 char[60] sample id,
+    608 char[4] anode, 624/632/648 float64 Ka1/Ka2/ratio).  Each range: header whose first uint32
+    is its length (+4 uint32 steps, +16 float64 start 2Theta, +176 float64 step, +192 float32
+    time/step, +240 float64 wavelength, +252 uint32 datum size, +256 uint32 supplementary header
+    size), then the supplementary header, then float32[steps].  Intensities are returned exactly
+    as stored.  Other RAW versions are refused until a sample validates them.
+    """
+    path = Path(filepath)
+    if not path.is_file():
+        raise FileNotFoundError(f"RAW file not found: {path}")
+    buf = path.read_bytes()
+    if not buf.startswith(b"RAW1.01"):
+        tag = buf[:7].split(b"\0", 1)[0].decode("latin-1", "replace")
+        if buf.startswith((b"RAW4", b"RAW2", b"RAW ")):
+            raise ValueError(f"{path.name}: Bruker .raw version '{tag}' is not supported yet (send a sample file to validate it)")
+        raise ValueError(f"{path.name} is not a Bruker .raw file")
+    if len(buf) < 712:
+        raise ValueError(f"{path.name}: truncated Bruker .raw header")
+    n_ranges = struct.unpack_from("<I", buf, 12)[0]
+    sample = _cstr(buf, 326, 60) or path.stem
+    anode_txt = _cstr(buf, 608, 4)
+    ka1, ka2 = struct.unpack_from("<2d", buf, 624)
+    ratio = struct.unpack_from("<d", buf, 648)[0]
+    file_wl = ka1 if 0.3 < ka1 < 3.0 else None
+    anode = (
+        (_normalize_anode(anode_txt) if anode_txt else None)
+        or _infer_anode_from_wavelength(file_wl)
+        or _normalize_anode(default_anode)
+    )
+    scans: list[ScanData] = []
+    pos = 712
+    for idx in range(n_ranges):
+        if pos + 260 > len(buf):
+            raise ValueError(f"{path.name}: range {idx + 1} header runs past end of file")
+        hdr_len, steps = struct.unpack_from("<II", buf, pos)
+        start = struct.unpack_from("<d", buf, pos + 16)[0]
+        step = struct.unpack_from("<d", buf, pos + 176)[0]
+        time_step = struct.unpack_from("<f", buf, pos + 192)[0]
+        range_wl = struct.unpack_from("<d", buf, pos + 240)[0]
+        datum, supp = struct.unpack_from("<II", buf, pos + 252)
+        if hdr_len < 260 or datum not in (0, 4) or not step > 0:
+            raise ValueError(f"{path.name}: unexpected layout in range {idx + 1} header")
+        data_at = pos + hdr_len + supp
+        end_at = data_at + 4 * steps
+        if end_at > len(buf):
+            raise ValueError(f"{path.name}: range {idx + 1} data runs past end of file")
+        y = np.frombuffer(buf, dtype="<f4", count=steps, offset=data_at).astype(np.float64)
+        wl = range_wl if 0.3 < range_wl < 3.0 else file_wl
+        meta: dict[str, Any] = {
+            "SourceFormat": "Bruker RAW1.01",
+            "Range": idx + 1,
+            "StartAngle_2Theta": start,
+            "StepSize_2Theta": step,
+            "TimePerStep": float(time_step),
+            "Sample": sample,
+        }
+        if 0.3 < ka2 < 3.0:
+            meta["Ka2"] = ka2
+            meta["Ka2Ka1Ratio"] = ratio
+        scans.append(
+            ScanData(
+                name=path.stem if n_ranges == 1 else f"{path.stem}_range{idx + 1}",
+                source_path=str(path),
+                source_format="raw",
+                two_theta=_grid(start, step, steps),
+                intensity=y,
+                anode=anode,
+                wavelength_ka1=wl,
+                counting_time=float(time_step) if time_step > 0 else 1.0,
+                metadata=meta,
+            )
+        )
+        pos = end_at
+    if pos != len(buf):
+        raise ValueError(f"{path.name}: {len(buf) - pos} unexplained trailing bytes after the last range")
+    if not scans:
+        raise ValueError(f"{path.name}: no scan ranges found")
+    return scans
+
+
 def read_scan_file(
     filepath: str | Path,
     angle_dataset: str | None = None,
@@ -693,6 +791,8 @@ def read_scan_file(
         return read_xrdml_file(path, default_anode=default_anode)
     if ext == ".asc":
         return read_asc_file(path, default_anode=default_anode)
+    if ext == ".raw":
+        return read_bruker_raw_file(path, default_anode=default_anode)
     if ext in (".xy", ".xye", ".txt", ".dat"):
         return read_xy_file(path, default_anode=default_anode, source_format=ext.lstrip(".").replace("xye", "xy").replace("txt", "xy"))
     raise ValueError(f"Unsupported input scan extension '{ext}' for {path.name}")

@@ -562,7 +562,7 @@
         <div id="staleServer" class="stale-banner" style="display:none;">The bridge server running now is an older version, so format and wavelength options cannot be saved. Close the bridge's black console window and double-click <b>start_xrd_bridge.bat</b> again.</div>
         <div class="flow">
           <div class="path-field">
-            <label class="label" for="inputDir"><span class="step">Source</span>Raw data folder <em>.hdf5 · .xrdml · .xy · .asc · .dat</em></label>
+            <label class="label" for="inputDir"><span class="step">Source</span>Raw data folder <em>.hdf5 · .xrdml · .raw · .xy · .asc · .dat</em></label>
             <div class="input-group lg">
               <input id="inputDir" type="text" placeholder="Select the raw XRD data folder..." />
               <button onclick="browseFolder('input_dir')">Browse</button>
@@ -587,8 +587,7 @@
               <label class="chip"><input type="checkbox" value="asc" onchange="onFormatsChange()" /><span>.asc</span></label>
               <label class="chip"><input type="checkbox" value="xy" onchange="onFormatsChange()" /><span>.xy</span></label>
               <label class="chip"><input type="checkbox" value="dat" onchange="onFormatsChange()" /><span>.dat</span></label>
-              <label class="chip disabled" title="Binary .raw / .rd need a sample file from your instrument before they can be enabled"><input type="checkbox" disabled /><span>.raw</span></label>
-              <label class="chip disabled" title="Binary .raw / .rd need a sample file from your instrument before they can be enabled"><input type="checkbox" disabled /><span>.rd</span></label>
+              <label class="chip disabled" title=".raw can be read as input; writing it is not available yet"><input type="checkbox" disabled /><span>.raw</span></label>
             </div>
           </div>
           <div class="opt">

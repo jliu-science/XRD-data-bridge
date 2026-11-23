@@ -1,7 +1,10 @@
 # Binary formats: notes for Bruker .raw and PANalytical .rd
 
-Status (2026-11-22): **not implemented yet**. The UI chips stay disabled until real sample files are
-available to validate against. These notes describe the public file layouts as documented by the
+Status (2026-11-23): **reading implemented** for Bruker `RAW1.01` (v3), validated point for point
+against a vendor `.xy` export of a real sample file. Other `.raw` versions are refused with a clear
+error until a sample validates them. Writing `.raw` is not implemented, so that output chip stays
+disabled. **PANalytical `.rd` is intentionally not supported** (decision 2026-11-23): the format
+cannot hold exact counts (see below), and the matching `.xrdml` should be used instead. These notes describe the public file layouts as documented by the
 open-source xylib project (LGPL, `xylib/bruker_raw.cpp`, `xylib/philips_raw.cpp`). They are a layout
 reference only; no code was copied. All values are little-endian.
 
@@ -10,15 +13,19 @@ reference only; no code was copied. All values are little-endian.
 - Magic: bytes 0–3 = `V3RD` or `V5RD`.
 - 84: uint8 diffractometer type; 85: uint8 anode index (0 Cu, 1 Mo, 2 Fe, 3 Cr, 4 Other); 86: uint8 focus.
 - 138: char[8] file name; 146: char[20] sample id.
-- 214: float64 step; 222: float64 start 2θ; 230: float64 end 2θ. Points = (end-start)/step + 1.
-- Data: V3 at 250, V5 at 810. uint16 per point, **sqrt-encoded**: counts = floor(0.01 · p²).
-- No wavelength or time per step is stored (only the anode index).
+- 94/102/110: float64 Kα1 / Kα2 / Kα2:Kα1 ratio (present in the V3 sample).
+- 214: float64 step; 222: float64 start 2θ; 230: float64 end 2θ.
+- Data: V3 at 250 (V5 reportedly at 810, unverified). uint16 per point, **sqrt-encoded**:
+  p = round(10 · √counts), so the file holds counts = p² / 100. The sample confirms this:
+  |10·√(vendor counts) − p| ≤ 0.5 for all 1,924 points. (xylib's floor(0.01·p²) does not match.)
+- Continuous scan: start/end are bin edges, points = (end−start)/step, point i at start + (i+0.5)·step.
+  Step scan: points = (end−start)/step + 1, point i at start + i·step. The reader picks whichever
+  matches the stored point count and refuses the file if neither does.
+- No time per step is stored.
 
-**Important: lossless writing is impossible for `.rd`.** A count c can only be stored exactly if some
-integer p satisfies floor(p²/100) = c. Above roughly 2,500 counts the gap between neighbouring squares
-is larger than 100, so most count values cannot be represented. Reading `.rd` is fine; writing `.rd`
-would change data points. This conflicts with the lab rule that conversion must never alter data, so
-`.rd` writing should stay off unless the user explicitly accepts that loss.
+**The format is lossy in both directions.** The instrument already rounds when it writes the `.rd`
+(only round(10·√counts) is kept), so reading cannot return the exact counts, and writing would round
+again. This is why the bridge supports neither direction.
 
 ## Bruker `.raw`
 
@@ -47,7 +54,18 @@ intensities lose precision beyond float32 (~7 significant digits).
   +136 uint32 datum size (4), +140 uint32 sub-segment bytes; data float32[steps] at +160 + sub-segment
   bytes.
 
-## Plan for Monday
+## Validation (2026-11-23)
+
+| Sample | Points | 2θ vs vendor `.xy` | Intensity vs vendor `.xy` |
+| --- | --- | --- | --- |
+| Bruker `AP1.raw` (RAW1.01, 1 range) | 6,801 | identical | identical (all 6,801) |
+| PANalytical `2-50 quick_1.rd` (V3, continuous) | 1,924 | identical to the vendor's 9 decimals | **not exact**: up to 3.2 counts off |
+
+The `.rd` stores only round(10·√counts) per point, so several integer counts share one stored value
+and the instrument's exact counts (as in the vendor `.xy` / Data Viewer `.csv`) cannot be recovered.
+Because the bridge's rule is that conversion never changes data, `.rd` was dropped as an input.
+
+## Original plan (2026-11-22)
 
 1. Read the user's real `.raw` (Bruker) and `.rd` (PANalytical) sample files; confirm the version and
    fields against this layout.

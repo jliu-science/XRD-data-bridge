@@ -39,7 +39,8 @@ STATE_PATH = BASE_DIR / ".bridge_state.json"
 
 SUPPORTED_INPUT_EXTS = set(INPUT_EXTENSIONS)
 # Lower number = more "raw". When several files share a stem in one folder, the most raw wins.
-SOURCE_PRIORITY = {".hdf5": 0, ".h5": 0, ".xrdml": 1, ".xy": 2, ".xye": 2, ".dat": 3, ".asc": 4}
+# Lower = closer to the instrument's own counts (Bruker .raw holds exact float32 counts).
+SOURCE_PRIORITY = {".hdf5": 0, ".h5": 0, ".raw": 0, ".xrdml": 1, ".xy": 2, ".xye": 2, ".dat": 3, ".asc": 4}
 _MARKER_EXTS = {".xrdml", ".xy", ".xye", ".dat"}
 _GENERATED_KEY = "__generated__"
 

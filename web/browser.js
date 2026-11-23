@@ -3,7 +3,7 @@
 window.browserBridge = (() => {
   const pyodideRoot = "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/";
   const modules = ["converter.py", "highscore_bridge.py", "watcher.py", "sample_data_gen.py", "bridge_web.py"];
-  const scanExtensions = /\.(hdf5|h5|xrdml|xy|xye|asc|dat)$/i;
+  const scanExtensions = /\.(hdf5|h5|xrdml|xy|xye|asc|dat|raw)$/i;
   let engine;
   let importNumber = 0;
   let inputLabel = "";
@@ -37,7 +37,7 @@ window.browserBridge = (() => {
       input.multiple = true;
       input.hidden = true;
       if (directory) input.webkitdirectory = true;
-      else input.accept = ".hdf5,.h5,.xrdml,.xy,.xye,.asc,.dat";
+      else input.accept = ".hdf5,.h5,.xrdml,.xy,.xye,.asc,.dat,.raw";
       const finish = files => {
         input.remove();
         resolve(files);
