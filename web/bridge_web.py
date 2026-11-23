@@ -20,7 +20,7 @@ manager.update_config(
 manager.logs.clear()
 
 SETTINGS = {
-    "include_subfolders", "anode", "target_anode", "output_formats", "asc_flavor",
+    "output_mode", "include_subfolders", "anode", "target_anode", "output_formats", "asc_flavor",
     "angle_dataset_override", "intensity_dataset_override",
 }
 
@@ -32,20 +32,34 @@ def _source(path: str) -> Path:
     return source
 
 
-def _download(converted: list[dict]) -> bool:
-    output_dir = Path(manager.config.custom_output_dir)
-    files = {
+def _written(converted: list[dict]) -> list[dict]:
+    """Files written by this run, each as {path, root, rel}: root is "input" (same folder as the
+    raw files) or "output" (the separate output folder); rel is relative to that root."""
+    roots = {"input": Path(manager.config.input_dir), "output": Path(manager.config.custom_output_dir)}
+    files = sorted({
         Path(path)
         for result in converted
         for scan in result.get("outputs", [])
         for path in scan["files"].values()
-    }
-    if not files:
-        return False
-    with ZipFile(WORK / "converted.zip", "w", ZIP_DEFLATED) as archive:
-        for path in sorted(files):
-            archive.write(path, path.relative_to(output_dir))
-    return True
+    })
+    written = []
+    for path in files:
+        for name, root in roots.items():
+            if path.is_relative_to(root):
+                written.append({"path": str(path), "root": name, "rel": path.relative_to(root).as_posix()})
+                break
+    return written
+
+
+def _finish(result: dict, converted: list[dict], data: dict) -> dict:
+    files = _written(converted)
+    download = False
+    if data.get("zip") and files:  # browsers that cannot write to a folder
+        with ZipFile(WORK / "converted.zip", "w", ZIP_DEFLATED) as archive:
+            for item in files:
+                archive.write(item["path"], item["rel"])
+        download = True
+    return {"result": result, "files": files, "download": download, "state": manager.get_dashboard_state()}
 
 
 def _dispatch(route: str, data: dict) -> dict:
@@ -64,10 +78,10 @@ def _dispatch(route: str, data: dict) -> dict:
         return {"created": [p.name for p in created], "state": manager.get_dashboard_state()}
     elif route == "/api/convert-all":
         result = manager.convert_all(subfolder_filter=data.get("subfolder", ""))
-        return {"result": result, "download": _download(result["converted"]), "state": manager.get_dashboard_state()}
+        return _finish(result, result["converted"], data)
     elif route == "/api/convert-one":
         result = manager.convert_file(_source(data["path"]))
-        return {"result": result, "download": _download([result]), "state": manager.get_dashboard_state()}
+        return _finish(result, [result], data)
     elif route == "/api/preview":
         return manager.preview_scan(_source(data["path"]))
     elif route == "/api/hdf5-tree":
