@@ -322,7 +322,7 @@ def _match_key_priority(name: str, candidates: tuple[str, ...]) -> int | None:
         if low == cand:
             return idx
     for idx, cand in enumerate(candidates):
-        if cand in low:
+        if len(cand) > 2 and cand in low:  # 'x'/'y' only as whole names, never inside 'y_pixel_offset'
             return idx + 100
     return None
 
@@ -484,6 +484,126 @@ def _pick_hdf5_patterns(h5f: Any, discovered: list[tuple[str, np.ndarray, np.nda
     return kept
 
 
+def _nx_text(val: Any) -> str:
+    val = _decode_attr(val)
+    if isinstance(val, np.ndarray):
+        val = val.ravel()[0] if val.size else ""
+        val = _decode_attr(val)
+    return str(val).strip()
+
+
+def _nx_scalar(grp: Any, path: str) -> tuple[Any, str] | None:
+    """Value and units of a scalar NeXus field, or None."""
+    try:
+        ds = grp[path]
+    except (KeyError, TypeError):
+        return None
+    val = np.asarray(ds[()]).ravel()
+    if val.size == 0:
+        return None
+    v = _decode_attr(val[0])
+    return v, _nx_text(ds.attrs.get("units", ""))
+
+
+def _read_nexus_entries(h5f: Any, path: Path, default_anode: str) -> list[ScanData]:
+    """Read NeXus files (e.g. Anton Paar XRDynamic / XRDdrive) by their own definitions.
+
+    Each NXentry's NXdata group names its intensity dataset ('signal') and its x axis ('axes').
+    The signal may be stored as (1, N, 1); it is squeezed to N values, nothing else is changed.
+    Instrument fields give the wavelength (stored in metres), anode, kV / mA and time per step."""
+    import h5py
+
+    entries = [
+        (name, grp)
+        for name, grp in h5f.items()
+        if isinstance(grp, h5py.Group) and _nx_text(grp.attrs.get("NX_class", "")) == "NXentry"
+    ]
+    scans: list[ScanData] = []
+    for entry_name, entry in entries:
+        nxdata = None
+        default = _nx_text(entry.attrs.get("default", ""))
+        if default and isinstance(entry.get(default), h5py.Group):
+            nxdata = entry[default]
+        else:
+            groups = [g for k, g in entry.items() if isinstance(g, h5py.Group) and _nx_text(g.attrs.get("NX_class", "")) == "NXdata"]
+            groups.sort(key=lambda g: g.name.rsplit("/", 1)[-1] != "data")
+            nxdata = groups[0] if groups else None
+        if nxdata is None:
+            continue
+        signal_name = _nx_text(nxdata.attrs.get("signal", ""))
+        if not signal_name:
+            for k, ds in nxdata.items():
+                if isinstance(ds, h5py.Dataset) and _nx_text(ds.attrs.get("signal", "")) == "1":
+                    signal_name = k
+                    break
+        axes = _decode_attr(nxdata.attrs.get("axes", ""))
+        axis_name = _nx_text(axes if not isinstance(axes, (list, tuple)) else axes[0])
+        axis_name = axis_name.split(":")[0].split(",")[0].strip()
+        if not (signal_name in nxdata and axis_name in nxdata):
+            continue
+        y = np.asarray(nxdata[signal_name][()], dtype=np.float64)
+        x = np.asarray(nxdata[axis_name][()], dtype=np.float64)
+        y = np.squeeze(y)
+        x = np.squeeze(x)
+        if y.ndim != 1 or x.ndim != 1 or x.size != y.size or x.size < 5:
+            raise ValueError(
+                f"{path.name}: NeXus signal '{signal_name}' {nxdata[signal_name].shape} does not match "
+                f"axis '{axis_name}' {nxdata[axis_name].shape}"
+            )
+
+        meta: dict[str, Any] = {"SourceFormat": "NeXus HDF5", "HDF5Group": nxdata.name, "Signal": signal_name, "Axis": axis_name}
+        wl = None
+        got = _nx_scalar(entry, "instrument/monochromator/wavelength")
+        if got:
+            val, units = float(got[0]), got[1].lower()
+            exp = {"m": 10, "nm": 1, "pm": -2, "a": 0, "angstrom": 0}.get(units, 10 if val < 1e-6 else 0)
+            wl = float(Decimal(repr(val)).scaleb(exp))  # decimal shift: 1.78896e-10 m -> 1.78896 A exactly
+        anode = None
+        got = _nx_scalar(entry, "instrument/source/target_material")
+        if got:
+            meta["TargetMaterial"] = str(got[0])
+            anode = _normalize_anode(got[0]) if str(got[0]).strip() else None
+        anode = anode or _infer_anode_from_wavelength(wl) or _normalize_anode(default_anode)
+        for field_path, key, scale in (
+            ("instrument/source/voltage", "Tension_kV", 1e-3),
+            ("instrument/source/current", "Current_mA", 1e3),
+        ):
+            got = _nx_scalar(entry, field_path)
+            if got:
+                v = float(got[0])
+                meta[key] = round(v * scale, 6) if got[1] in ("V", "A") else v
+        counting_time = 1.0
+        got = _nx_scalar(entry, "info/time_per_step")
+        if got:
+            counting_time = float(got[0])
+        for field_path, key in (
+            ("start_time", "StartTimeStamp"),
+            ("end_time", "EndTimeStamp"),
+            ("instrument/name", "Instrument"),
+            ("sample/name", "SampleName"),
+            ("title", "Title"),
+            ("info/scan_type", "ScanType"),
+        ):
+            got = _nx_scalar(entry, field_path)
+            if got:
+                meta[key] = str(got[0])
+        order = np.argsort(x, kind="stable")
+        scans.append(
+            ScanData(
+                name=path.stem if len(entries) == 1 else f"{path.stem}_{entry_name}",
+                source_path=str(path),
+                source_format="hdf5",
+                two_theta=x[order],
+                intensity=y[order],
+                anode=anode,
+                wavelength_ka1=wl,
+                counting_time=counting_time,
+                metadata=meta,
+            )
+        )
+    return scans
+
+
 def read_hdf5_file(
     filepath: str | Path,
     angle_dataset: str | None = None,
@@ -516,7 +636,12 @@ def read_hdf5_file(
                     )
                 ]
 
-        # 2. Automatic hierarchical discovery across all groups.
+        # 2. NeXus files describe their own signal and axis: use that when present.
+        nexus = _read_nexus_entries(h5f, path, default_anode)
+        if nexus:
+            return nexus
+
+        # 3. Automatic hierarchical discovery across all groups.
         discovered: list[tuple[str, np.ndarray, np.ndarray, dict[str, Any]]] = []
 
         def visit_group(grp: Any, grp_path: str) -> None:

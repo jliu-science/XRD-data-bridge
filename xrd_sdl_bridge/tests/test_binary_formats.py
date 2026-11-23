@@ -163,6 +163,47 @@ class TestNexusHdf5(unittest.TestCase):
             np.testing.assert_array_equal(scans[0].intensity, counts)
             self.assertIn("instrument/detector", scans[0].metadata["HDF5SkippedGroups"])
 
+    def test_xrdynamic_layout_uses_nexus_signal(self) -> None:
+        """XRDdrive files: signal 'data' stored as (1, N, 1), axis 'two_theta', plus distractors
+        such as y_pixel_offset that must never be taken as intensity."""
+        import h5py
+
+        tt = 4.0 + np.arange(300) * 0.01
+        counts = (np.arange(300) % 17 + 3).astype(np.float64)
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "Coupled scan.hdf5"
+            with h5py.File(p, "w") as f:
+                entry = f.create_group("entry")
+                entry.attrs["NX_class"] = np.array([b"NXentry"])
+                data = entry.create_group("data")
+                data.attrs["NX_class"] = np.array([b"NXdata"])
+                data.attrs["signal"] = np.array([b"data"])
+                data.attrs["axes"] = np.array([b"two_theta"])
+                data["data"] = counts.reshape(1, -1, 1)
+                data["two_theta"] = tt
+                data["omega"] = tt / 2
+                data["y_pixel_offset"] = np.linspace(0.03, 0.7, 300)
+                inst = entry.create_group("instrument")
+                mono = inst.create_group("monochromator")
+                mono["wavelength"] = np.array([1.78896e-10])
+                mono["wavelength"].attrs["units"] = np.array([b"m"])
+                src = inst.create_group("source")
+                src["target_material"] = np.array([b"CoK\\a"])
+                src["voltage"] = np.array([40000.0])
+                src["voltage"].attrs["units"] = np.array([b"V"])
+                det = inst.create_group("detector")
+                det.attrs["NX_class"] = np.array([b"NXdetector"])
+                det["x_pixel_size"] = np.array([5.5e-05])
+            scans = read_scan_file(p)
+            self.assertEqual(len(scans), 1)
+            scan = scans[0]
+            self.assertEqual(scan.name, "Coupled scan")
+            np.testing.assert_array_equal(scan.intensity, counts)
+            np.testing.assert_array_equal(scan.two_theta, tt)
+            self.assertEqual(scan.anode, "Co")
+            self.assertEqual(scan.wavelength_ka1, 1.78896)
+            self.assertEqual(scan.metadata["Tension_kV"], 40.0)
+
 
 @unittest.skipUnless(SAMPLES.is_dir(), "vendor sample files not present")
 class TestVendorSamples(unittest.TestCase):
